@@ -1,3 +1,10 @@
+## 0.1.3
+
+* Updates **Application Base** to version 0.1.3
+* Updates minimum supported SDK version to Flutter 3.35.4/Dart 3.9.2
+* Updates all packages to actual versions
+* Package versions store rebased from refs to tags
+
 ## 0.1.2
 
 * Updates **Application Base** to version 0.1.2
