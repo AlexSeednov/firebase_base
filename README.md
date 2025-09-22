@@ -49,11 +49,12 @@ Add a line like this to your package's pubspec.yaml (and run an implicit
 flutter pub get):
 
 ```yaml
-  # https://github.com/AlexSeednov/firebase_base
+  # Not supported: Linux | MacOS | Web | Windows
   firebase_base:
     git:
       url: https://github.com/AlexSeednov/firebase_base
-      ref: release/0.0.3
+      tag_pattern: v{{version}}
+    version: 0.1.3
 ```
 
 Now just call `FirebaseBase -> prepare` on application launching to initialize 

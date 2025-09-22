@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: 0.1.3
+    version: ^0.1.3
 
   # Not supported: Linux | MacOS | Web | Windows
   #
