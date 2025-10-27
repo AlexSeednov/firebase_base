@@ -83,12 +83,22 @@ final class FirebaseMessagingService {
         FirebaseMessaging.onMessage.listen(_onForegroundListen);
       }
 
-      /// Get unique firebase token
-      _token = await _messaging!.getToken() ?? '';
-      if (_token.isEmpty) logError(error: 'FCM token is empty');
-
       if (isIOS) {
         _apnsToken = await _messaging!.getAPNSToken();
+        if (_apnsToken == null) {
+          /// Do not log it as error to provide better logs
+          logInfo(info: 'apnsToken is null');
+        } else {
+          logInfo(info: 'apnsToken ready');
+        }
+      }
+
+      /// Get unique firebase token
+      _token = await _messaging!.getToken() ?? '';
+      if (_apnsToken == null) {
+        if (_token.isEmpty) logError(error: 'FCM token is empty');
+      } else {
+        logInfo(info: 'FCM token ready');
       }
 
       /// Any time the token refreshes, need to get it

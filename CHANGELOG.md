@@ -1,3 +1,7 @@
+## 0.1.4
+
+* Firebase Messaging small improve
+
 ## 0.1.3
 
 * Updates **Application Base** to version 0.1.3

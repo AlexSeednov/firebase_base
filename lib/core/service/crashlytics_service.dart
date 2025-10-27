@@ -39,7 +39,7 @@ final class CrashlyticsService {
     }
 
     /// Event's date - current in UTC
-    final String date = _dateFormat.format(DateTime.now().toUtc());
+    final String date = _dateFormat.format(DateTime.timestamp());
 
     /// Finally send error
     await FirebaseCrashlytics.instance.recordError(
