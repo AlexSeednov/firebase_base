@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:application_base/core/service/logger_service.dart';
+import 'package:application_base/core/mixin/logging_mixin.dart';
 import 'package:application_base/core/service/platform_service.dart';
 import 'package:application_base/core/service/service_locator.dart';
 import 'package:firebase_base/core/entity/push_entity.dart';
@@ -35,9 +35,10 @@ import 'package:rxdart/rxdart.dart';
 /// Details in [Firebase docs](https://firebase.google.com/docs/cloud-messaging/flutter/receive)
 ///
 /// Sheme with common information [here](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png)
-final class FirebaseMessagingService {
+final class FirebaseMessagingService with LoggingMixin {
   /// Name for logging
-  static const String _logName = 'Firebase messaging';
+  @override
+  final String logName = 'Firebase messaging';
 
   /// Firebase unique token for current device
   String _token = '';
@@ -66,8 +67,9 @@ final class FirebaseMessagingService {
       /// Init messaging instance
       _messaging = FirebaseMessaging.instance;
 
-      /// Activate foreground messaging for iOS
+      /// Platform-specific castomization
       if (isIOS) {
+        /// Activate foreground messaging for iOS
         await _messaging!.setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
@@ -83,12 +85,13 @@ final class FirebaseMessagingService {
         FirebaseMessaging.onMessage.listen(_onForegroundListen);
       }
 
-      /// Get unique firebase token
-      _token = await _messaging!.getToken() ?? '';
-      if (_token.isEmpty) logError(error: 'FCM token is empty');
-
-      if (isIOS) {
-        _apnsToken = await _messaging!.getAPNSToken();
+      ///
+      final bool result = await _getToken();
+      if (!result) {
+        /// Try one more time after small delay
+        logNamedInfo(info: 'Try to get tokens one more time');
+        await Future<void>.delayed(const Duration(seconds: 1));
+        await _getToken();
       }
 
       /// Any time the token refreshes, need to get it
@@ -98,12 +101,12 @@ final class FirebaseMessagingService {
       unawaited(_onInitializationHandle());
       FirebaseMessaging.onMessageOpenedApp.listen(_onOpenedListen);
     } catch (e) {
-      logError(error: '$_logName initialization exception: $e');
+      logNamedError(error: 'initialization exception: $e');
       return false;
     }
 
     /// Success
-    logInfo(info: '$_logName initialized');
+    logNamedInfo(info: 'initialized');
     return true;
   }
 
@@ -113,9 +116,37 @@ final class FirebaseMessagingService {
   }
 
   ///
+  Future<bool> _getToken() async {
+    try {
+      if (isIOS) {
+        /// APNs token is available only on iOS
+        _apnsToken = await _messaging!.getAPNSToken();
+        if (_apnsToken == null) {
+          /// Do not log it as error to provide better logs
+          logNamedInfo(info: 'apnsToken is null');
+        } else {
+          logNamedInfo(info: 'apnsToken ready');
+        }
+      }
+
+      /// Get unique firebase token
+      _token = await _messaging!.getToken() ?? '';
+      if (_token.isEmpty) {
+        logNamedError(error: 'FCM token is empty');
+      } else {
+        logNamedInfo(info: 'FCM token ready');
+        return true;
+      }
+    } catch (e) {
+      logNamedError(error: 'token exception: $e');
+    }
+    return false;
+  }
+
+  ///
   Future<AuthorizationStatus> requestPermission() async {
     if (_messaging == null) {
-      logError(
+      logNamedError(
         error:
             'FCM instance is null. '
             'Did you forget to call FirebaseMessagingService->prepare?',
@@ -124,7 +155,9 @@ final class FirebaseMessagingService {
     }
 
     final NotificationSettings settings = await _messaging!.requestPermission();
-    logInfo(info: 'User granted permission: ${settings.authorizationStatus}');
+    logNamedInfo(
+      info: 'User granted permission: ${settings.authorizationStatus}',
+    );
     return settings.authorizationStatus;
   }
 
@@ -136,7 +169,7 @@ final class FirebaseMessagingService {
     /// Create data from message
     final pushEntity = PushEntity.fromMessage(message);
 
-    logInfo(info: 'Got push "${pushEntity.title}" in Terminated state');
+    logNamedInfo(info: 'Got push "${pushEntity.title}" in Terminated state');
 
     _handleMessage(pushEntity);
   }
@@ -148,7 +181,7 @@ final class FirebaseMessagingService {
     /// Create data from message
     final pushEntity = PushEntity.fromMessage(message);
 
-    logInfo(info: 'Got push "${pushEntity.title}" in Background state');
+    logNamedInfo(info: 'Got push "${pushEntity.title}" in Background state');
 
     _handleMessage(pushEntity);
   }
@@ -160,7 +193,7 @@ final class FirebaseMessagingService {
     /// Create data from message
     final pushEntity = PushEntity.fromMessage(message);
 
-    logInfo(info: 'Got push "${pushEntity.title}" in Foreground state');
+    logNamedInfo(info: 'Got push "${pushEntity.title}" in Foreground state');
 
     ///
     getIt<LocalNotificationsService>().show(
@@ -171,10 +204,10 @@ final class FirebaseMessagingService {
 
   /// User pressed on push and application opened from Foreground state
   void _handleForegroundMessage(String? payload) {
-    logInfo(info: 'Handle push in Foreground state');
+    logNamedInfo(info: 'Handle push in Foreground state');
 
     if (payload?.isEmpty ?? true) {
-      logInfo(info: 'Foreground push without payload');
+      logNamedInfo(info: 'Foreground push without payload');
       return;
     }
 
@@ -185,7 +218,7 @@ final class FirebaseMessagingService {
       /// And handle it as a common push message
       _handleMessage(pushEntity);
     } catch (e) {
-      logError(
+      logNamedError(
         error:
             'Foreground push with wrong payload: $payload\n'
             'Got error $e',
@@ -195,14 +228,14 @@ final class FirebaseMessagingService {
 
   ///
   void _handleMessage(PushEntity pushEntity) {
-    logInfo(info: 'Handle push');
+    logNamedInfo(info: 'Handle push');
 
     /// Check push's `data` field and try to get useful information from there
     final Map<String, dynamic>? payload = pushEntity.data;
 
     if (payload?.isEmpty ?? true) {
       /// There is nothing to get
-      logInfo(info: 'Push without payload');
+      logNamedInfo(info: 'Push without payload');
       return;
     }
 
