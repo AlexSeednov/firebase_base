@@ -1,6 +1,6 @@
 ## 0.1.4
 
-* Firebase Messaging small improve
+* Firebase Messaging - getting tokens improved
 
 ## 0.1.3
 
