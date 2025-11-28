@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Firebase Messaging - getting tokens logging improved
+
 ## 0.1.4
 
 * Firebase Messaging - getting tokens improved

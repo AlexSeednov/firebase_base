@@ -86,12 +86,12 @@ final class FirebaseMessagingService with LoggingMixin {
       }
 
       ///
-      final bool result = await _getToken();
+      final bool result = await _getToken(lastTry: false);
       if (!result) {
         /// Try one more time after small delay
         logNamedInfo(info: 'Try to get tokens one more time');
         await Future<void>.delayed(const Duration(seconds: 1));
-        await _getToken();
+        await _getToken(lastTry: true);
       }
 
       /// Any time the token refreshes, need to get it
@@ -115,8 +115,8 @@ final class FirebaseMessagingService with LoggingMixin {
     pushSubject.close();
   }
 
-  ///
-  Future<bool> _getToken() async {
+  /// Log as errors only if [lastTry] is true, log as information otherwise
+  Future<bool> _getToken({required bool lastTry}) async {
     try {
       if (isIOS) {
         /// APNs token is available only on iOS
@@ -132,13 +132,21 @@ final class FirebaseMessagingService with LoggingMixin {
       /// Get unique firebase token
       _token = await _messaging!.getToken() ?? '';
       if (_token.isEmpty) {
-        logNamedError(error: 'FCM token is empty');
+        if (lastTry) {
+          logNamedError(error: 'FCM token is empty');
+        } else {
+          logNamedInfo(info: 'FCM token is empty');
+        }
       } else {
         logNamedInfo(info: 'FCM token ready');
         return true;
       }
     } catch (e) {
-      logNamedError(error: 'token exception: $e');
+      if (lastTry) {
+        logNamedError(error: 'token exception: $e');
+      } else {
+        logNamedInfo(info: 'token exception: $e');
+      }
     }
     return false;
   }
