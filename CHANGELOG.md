@@ -1,3 +1,9 @@
+## 0.1.6
+
+* Updates minimum supported SDK version to Flutter 3.38.7/Dart 3.10.7
+* Updates all packages to actual versions
+* Updates **Application Base** to version 0.1.6
+
 ## 0.1.5
 
 * Firebase Messaging - getting tokens logging improved
