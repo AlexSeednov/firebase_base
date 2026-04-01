@@ -58,9 +58,10 @@ final class CrashlyticsService {
       FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
 
   /// Pass all uncaught asynchronous errors that aren't handled
-  /// by the Flutter framework to Crashlytics
-  bool _onError(Object error, __) {
-    logError(error: error.toString());
+  /// by the Flutter framework to Crashlytics. Should be sent via
+  /// [FirebaseCrashlytics.instance] directly for better and more stable flow.
+  bool _onError(Object error, StackTrace stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   }
 }
