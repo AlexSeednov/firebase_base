@@ -45,7 +45,7 @@ final class CrashlyticsService {
     await FirebaseCrashlytics.instance.recordError(
       error,
       // For better navigation in Crashlytics make expected errors
-      //with date instead of stack trace
+      // with date instead of stack trace
       stack ?? StackTrace.fromString('#0 $date - $error (app.dart)'),
       reason: error,
       fatal: true,
