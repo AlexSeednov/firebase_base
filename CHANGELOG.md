@@ -1,3 +1,7 @@
+## 0.1.8
+
+* Updates **Application Base** to version 0.2.0
+
 ## 0.1.7
 
 * Improved fatal error logging
