@@ -65,6 +65,18 @@ await FirebaseBase.prepare(name: applicationName);
 ```
 where `applicationName` is Android application name for system notification setting.
 
+On **Android** you can also pass two optional parameters that configure the
+notification channel and the status bar icon (see 
+[Local notifications](#local-notifications)):
+
+```dart
+await FirebaseBase.prepare(
+  name: applicationName,
+  channelKey: 'app-notifications',                  // must match the manifest
+  icon: 'resource://drawable/ic_stat_notification', // monochrome small icon
+);
+```
+
 All four services are **Singleton** and available via `GetIt`.
 
 ## Firebase Core
@@ -173,4 +185,49 @@ Used only on **Android** to show push notifications, got in **Foreground**
 application state.
 
 Supports title, body and image.
+
+### Notification channel (`channelKey`)
+
+On Android a push is shown by two different mechanisms depending on the
+application state:
+
+* **Foreground** - by this package via `awesome_notifications`, on the channel
+created here;
+* **Background / Terminated** - by FCM itself, on the channel declared in the
+app manifest as `com.google.firebase.messaging.default_notification_channel_id`.
+
+For both to use the same **high importance** channel (and therefore show a
+heads-up banner), the `channelKey` passed to `prepare` MUST exactly match the
+manifest value. If they differ, FCM falls back to a default-importance channel
+and pushes arrive without a banner. Keep the key flavor-independent — channels
+are per-app, so different flavors (with different `applicationId`) do not clash.
+
+```xml
+<!-- AndroidManifest.xml -->
+<meta-data
+  android:name="com.google.firebase.messaging.default_notification_channel_id"
+  android:value="app-notifications" />
+```
+
+When `channelKey` is omitted it falls back to the legacy `'<name>-notifications'`
+key for backward compatibility.
+
+### Small icon (`icon`)
+
+Android renders the status bar / notification small icon using only its alpha
+channel as a white (then tinted) silhouette. Provide a dedicated **monochrome**
+(transparent + white) drawable, otherwise the launcher icon is used and shows as
+a white blob (or nothing on some OEMs, e.g. Xiaomi/MIUI).
+
+Pass it as `icon: 'resource://drawable/ic_stat_notification'` for the foreground
+path, and declare the same drawable for the FCM background path in the manifest:
+
+```xml
+<!-- AndroidManifest.xml -->
+<meta-data
+  android:name="com.google.firebase.messaging.default_notification_icon"
+  android:resource="@drawable/ic_stat_notification" />
+```
+
+When `icon` is omitted the application launcher icon is used.
 

@@ -1,3 +1,16 @@
+## 0.1.9
+
+* Firebase Messaging - optional `channelKey` parameter for the Android
+  notification channel id, decoupled from the user-visible channel name. Lets
+  the channel match the manifest's `default_notification_channel_id` so pushes
+  show a heads-up banner in Background/Terminated state. Defaults to the legacy
+  `'<name>-notifications'` key when omitted.
+* Firebase Messaging - optional `icon` parameter for the foreground (Android)
+  notification small icon, forwarded to `awesome_notifications`. Defaults to the
+  application launcher icon when omitted.
+* Fixes `FirebaseService` name clash with newer `firebase_core` (ambiguous
+  import) by hiding it from the `firebase_core` import.
+
 ## 0.1.8
 
 * Updates **Application Base** to version 0.2.0
