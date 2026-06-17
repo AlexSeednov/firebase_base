@@ -23,24 +23,43 @@ final class LocalNotificationsService {
   static HandleMessage? _handleMessage;
 
   /// **name** - Android application name for system notification settings
+  /// (used as the user-visible channel name)
+  ///
+  /// **channelKey** - stable id of the notification channel. It MUST exactly
+  /// match `com.google.firebase.messaging.default_notification_channel_id` in
+  /// the app's `AndroidManifest.xml`: in Background/Terminated state FCM shows
+  /// the push itself on that channel, while in Foreground the same channel is
+  /// used here. If they differ, FCM falls back to a default-importance channel
+  /// and the heads-up banner is not shown. Keep it flavor-independent (channels
+  /// are per-app). `null` falls back to the legacy `'$name-notifications'` key.
+  ///
+  /// **icon** - small (status bar) icon resource for foreground notifications,
+  /// e.g. `'resource://drawable/ic_stat_notification'`. Must be a monochrome
+  /// (transparent + white) asset, otherwise Android renders the launcher icon
+  /// as a white blob. `null` falls back to the application launcher icon.
   Future<void> prepare({
     required HandleMessage handleMessage,
     required String name,
+    String? channelKey,
+    String? icon,
   }) async {
     _handleMessage = handleMessage;
 
+    /// Channel id is shared with FCM via the manifest, see [channelKey]
+    final String key = channelKey ?? '$name-notifications';
+
     /// Prepare settings
     _androidLocalChannel = NotificationChannel(
-      channelGroupKey: '$name-notifications-group',
-      channelKey: '$name-notifications',
+      channelGroupKey: '$key-group',
+      channelKey: key,
       channelName: '$name Push Notification',
       channelDescription: 'Notification channel for informing user',
       importance: NotificationImportance.Max,
     );
 
     await _instance.initialize(
-      // Use default application icon
-      null,
+      // Monochrome small icon; null falls back to the default application icon
+      icon,
       [_androidLocalChannel],
     );
 

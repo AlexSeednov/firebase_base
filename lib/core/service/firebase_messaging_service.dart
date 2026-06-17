@@ -61,8 +61,18 @@ final class FirebaseMessagingService with LoggingMixin {
   ///
   void Function(String)? onTokenChanged;
 
-  /// Initialization of all necessary data
-  Future<bool> prepare({required String name}) async {
+  /// **channelKey** - stable Android notification channel id; must match the
+  /// manifest's `default_notification_channel_id`. See
+  /// [LocalNotificationsService.prepare].
+  ///
+  /// **icon** - small (status bar) icon resource for foreground notifications
+  /// on Android, e.g. `'resource://drawable/ic_stat_notification'`. See
+  /// [LocalNotificationsService.prepare].
+  Future<bool> prepare({
+    required String name,
+    String? channelKey,
+    String? icon,
+  }) async {
     try {
       /// Init messaging instance
       _messaging = FirebaseMessaging.instance;
@@ -81,6 +91,8 @@ final class FirebaseMessagingService with LoggingMixin {
         await getIt<LocalNotificationsService>().prepare(
           handleMessage: _handleForegroundMessage,
           name: name,
+          channelKey: channelKey,
+          icon: icon,
         );
         FirebaseMessaging.onMessage.listen(_onForegroundListen);
       }

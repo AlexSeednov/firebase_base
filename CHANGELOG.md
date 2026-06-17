@@ -1,3 +1,10 @@
+## 0.1.9
+
+* Firebase Messaging - optional `channelKey` parameter for the Android
+  notification channel id
+* Firebase Messaging - optional `icon` parameter for the foreground (Android)
+  notification small icon
+
 ## 0.1.8
 
 * Updates **Application Base** to version 0.2.0
