@@ -2,8 +2,10 @@ import 'package:application_base/core/service/logger_service.dart';
 import 'package:application_base/core/service/service_locator.dart';
 import 'package:firebase_base/core/service/crashlytics_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:injectable/injectable.dart';
 
 /// Singleton
+@lazySingleton
 final class FirebaseService {
   /// Name for logging
   static const String _logName = 'Firebase Service';

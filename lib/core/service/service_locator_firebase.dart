@@ -1,20 +1,12 @@
-import 'package:application_base/core/service/service_locator.dart';
-import 'package:firebase_base/core/service/crashlytics_service.dart';
-import 'package:firebase_base/core/service/firebase_messaging_service.dart';
-import 'package:firebase_base/core/service/firebase_service.dart';
-import 'package:firebase_base/core/service/local_notifications_service.dart';
+import 'package:injectable/injectable.dart';
 
-abstract final class ServiceLocatorFirebase {
-  /// Setup service locator
-  static void prepare() {
-    getIt
-      ..registerLazySingleton<FirebaseService>(FirebaseService.new)
-      ..registerLazySingleton<CrashlyticsService>(CrashlyticsService.new)
-      ..registerLazySingleton<FirebaseMessagingService>(
-        FirebaseMessagingService.new,
-      )
-      ..registerLazySingleton<LocalNotificationsService>(
-        LocalNotificationsService.new,
-      );
-  }
-}
+/// Injectable micro-package module.
+///
+/// build_runner collects every `@injectable` service of the package into
+/// `service_locator_firebase.module.dart` (the `FirebaseBasePackageModule`
+/// class). Consumers wire it via `externalPackageModulesBefore` in their
+/// `@InjectableInit` — there is no manual registration
+/// (`ServiceLocatorFirebase.prepare`) anymore; getIt is the single source of
+/// singleton ownership.
+@InjectableInit.microPackage()
+void initFirebaseBasePackage() {}

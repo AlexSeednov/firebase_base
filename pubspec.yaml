@@ -1,6 +1,6 @@
 name: firebase_base
 description: "Unified base Firebase integration for Flutter applications"
-version: 0.1.9
+version: 0.2.0
 homepage: https://github.com/AlexSeednov/firebase_base
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -45,6 +45,9 @@ dependencies:
     sdk: flutter
 
   # All platform supported
+  injectable: ^2.7.1
+
+  # All platform supported
   intl: ^0.20.2
 
   # All platform supported
@@ -62,7 +65,20 @@ dev_dependencies:
     sdk: flutter
 
   # dart run build_runner build --delete-conflicting-outputs
+  injectable_generator: ^2.12.0
+
+  # dart run build_runner build --delete-conflicting-outputs
   json_serializable: ^6.12.0
+
+# TEMPORARY: the package is developed against the `refactoring` branch of
+# application_base (new injectable DI). This override forces application_base
+# onto that branch across the graph until the updated tag is released. After
+# release — remove the override and bump the application_base dependency version.
+dependency_overrides:
+  application_base:
+    git:
+      url: https://github.com/AlexSeednov/application_base
+      ref: refactoring
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

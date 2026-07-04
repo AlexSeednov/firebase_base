@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_base/core/entity/push_entity.dart';
+import 'package:injectable/injectable.dart';
 
 ///
 typedef HandleMessage = void Function(String? message);
@@ -9,6 +10,7 @@ typedef HandleMessage = void Function(String? message);
 /// Singleton
 ///
 /// Used only for Android
+@lazySingleton
 final class LocalNotificationsService {
   ///
   static const _payloadField = 'payload';
