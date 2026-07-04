@@ -67,15 +67,17 @@ import 'package:firebase_base/core/service/service_locator_firebase.module.dart'
 @InjectableInit(
   externalPackageModulesBefore: [ExternalModule(FirebaseBasePackageModule)],
 )
-void configureDependencies() => getIt.init();
+Future<void> configureDependencies() => getIt.init();
 
-// On launch, after getIt.init(), initialize Firebase:
+// On launch — await DI init, then initialize Firebase:
+await configureDependencies();
 await FirebaseBase.prepare(name: applicationName);
 ```
 where `applicationName` is Android application name for system notification setting.
 
-`FirebaseBase.prepare` resolves the registered services, so it must be called
-**after** the consumer's `getIt.init()`.
+`getIt.init()` is asynchronous when external package modules are wired, so
+**await** it. `FirebaseBase.prepare` resolves the registered services, so it
+must run **after** `getIt.init()` has completed.
 
 On **Android** you can also pass two optional parameters that configure the
 notification channel and the status bar icon (see 
