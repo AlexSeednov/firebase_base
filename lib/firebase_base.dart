@@ -24,9 +24,9 @@ abstract final class FirebaseBase {
   /// platform and flavor
   ///
   /// Registration of the package's services is performed by the injectable
-  /// module `FirebaseBasePackageModule` (wired via `externalPackageModulesBefore`
-  /// in the consumer's `@InjectableInit`), so this method must be called AFTER
-  /// the consumer's `getIt.init()`.
+  /// module `FirebaseBasePackageModule` (wired via
+  /// `externalPackageModulesBefore` in the consumer's `@InjectableInit`), so
+  /// this method must be called AFTER the consumer's `getIt.init()`.
   static Future<void> prepare({
     required String name,
     String? channelKey,
