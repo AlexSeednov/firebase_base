@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: ^0.2.0
+    version: ^0.2.3
 
   # Not supported: Linux | MacOS | Web | Windows
   #
@@ -52,6 +52,9 @@ dependencies:
 
   # All platform supported
   json_annotation: ^4.12.0
+
+  # All platform supported
+  meta: ^1.16.0
 
   # All platform supported
   rxdart: ^0.28.0
