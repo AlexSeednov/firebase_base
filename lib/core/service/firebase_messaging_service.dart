@@ -7,6 +7,7 @@ import 'package:firebase_base/core/entity/push_entity.dart';
 import 'package:firebase_base/core/service/local_notifications_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:injectable/injectable.dart';
+import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// Messages have different behaviour depends on application state and OS.
@@ -36,6 +37,10 @@ import 'package:rxdart/rxdart.dart';
 /// Sheme with common information [here](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png)
 @lazySingleton
 final class FirebaseMessagingService with LoggingMixin {
+  ///
+  @visibleForTesting
+  FirebaseMessagingService();
+
   /// Name for logging
   @override
   final String logName = 'Firebase messaging';

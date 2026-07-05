@@ -7,6 +7,10 @@ import 'package:intl/intl.dart';
 ///
 @lazySingleton
 final class CrashlyticsService {
+  ///
+  @visibleForTesting
+  CrashlyticsService();
+
   /// Name for logging
   static const String _logName = 'Crashlytics Service';
 
