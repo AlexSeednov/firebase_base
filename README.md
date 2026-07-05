@@ -61,9 +61,23 @@ Now just call `FirebaseBase -> prepare` on application launching to initialize
 all necessary data.
 
 ```dart
+// Wire the package's injectable module into your service locator:
+import 'package:firebase_base/core/service/service_locator_firebase.module.dart';
+
+@InjectableInit(
+  externalPackageModulesBefore: [ExternalModule(FirebaseBasePackageModule)],
+)
+Future<void> configureDependencies() => getIt.init();
+
+// On launch — await DI init, then initialize Firebase:
+await configureDependencies();
 await FirebaseBase.prepare(name: applicationName);
 ```
 where `applicationName` is Android application name for system notification setting.
+
+`getIt.init()` is asynchronous when external package modules are wired, so
+**await** it. `FirebaseBase.prepare` resolves the registered services, so it
+must run **after** `getIt.init()` has completed.
 
 On **Android** you can also pass two optional parameters that configure the
 notification channel and the status bar icon (see 
@@ -77,7 +91,9 @@ await FirebaseBase.prepare(
 );
 ```
 
-All four services are **Singleton** and available via `GetIt`.
+All four services are getIt-owned singletons, registered by the package's
+injectable module (`@lazySingleton`); resolve them via `getIt<T>()` or inject
+them through a constructor.
 
 ## Firebase Core
 

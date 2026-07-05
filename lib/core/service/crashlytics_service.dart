@@ -1,10 +1,16 @@
 import 'package:application_base/core/service/logger_service.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 
-/// Singleton
+///
+@lazySingleton
 final class CrashlyticsService {
+  ///
+  @visibleForTesting
+  CrashlyticsService();
+
   /// Name for logging
   static const String _logName = 'Crashlytics Service';
 

@@ -1,6 +1,6 @@
 name: firebase_base
 description: "Unified base Firebase integration for Flutter applications"
-version: 0.1.9
+version: 0.2.0
 homepage: https://github.com/AlexSeednov/firebase_base
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: ^0.2.0
+    version: ^0.2.3
 
   # Not supported: Linux | MacOS | Web | Windows
   #
@@ -45,10 +45,16 @@ dependencies:
     sdk: flutter
 
   # All platform supported
+  injectable: ^2.7.1
+
+  # All platform supported
   intl: ^0.20.2
 
   # All platform supported
   json_annotation: ^4.10.0
+
+  # All platform supported
+  meta: ^1.16.0
 
   # All platform supported
   rxdart: ^0.28.0
@@ -60,6 +66,9 @@ dev_dependencies:
   #
   flutter_test:
     sdk: flutter
+
+  # dart run build_runner build --delete-conflicting-outputs
+  injectable_generator: ^2.12.0
 
   # dart run build_runner build --delete-conflicting-outputs
   json_serializable: ^6.12.0

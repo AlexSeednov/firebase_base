@@ -1,7 +1,6 @@
 import 'package:application_base/core/service/service_locator.dart';
 import 'package:firebase_base/core/service/firebase_messaging_service.dart';
 import 'package:firebase_base/core/service/firebase_service.dart';
-import 'package:firebase_base/core/service/service_locator_firebase.dart';
 // Hide firebase_core's FirebaseService to avoid a name clash with this
 // package's own FirebaseService; only FirebaseOptions is needed from here.
 import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
@@ -23,15 +22,17 @@ abstract final class FirebaseBase {
   ///
   /// **options** - Specific Firebase configuration options depends on current
   /// platform and flavor
+  ///
+  /// Registration of the package's services is performed by the injectable
+  /// module `FirebaseBasePackageModule` (wired via
+  /// `externalPackageModulesBefore` in the consumer's `@InjectableInit`), so
+  /// this method must be called AFTER the consumer's `getIt.init()`.
   static Future<void> prepare({
     required String name,
     String? channelKey,
     String? icon,
     FirebaseOptions? options,
   }) async {
-    /// Setup service locator
-    ServiceLocatorFirebase.prepare();
-
     /// Prepare all Firebase packages
     await getIt<FirebaseService>().prepare(options: options);
 

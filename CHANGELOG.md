@@ -1,3 +1,16 @@
+## 0.2.0
+
+* **BREAKING — DI moved to injectable.** The package now registers its own
+  services (`FirebaseService`, `CrashlyticsService`, `FirebaseMessagingService`,
+  `LocalNotificationsService`) through an injectable micro-package module
+  (`FirebaseBasePackageModule` in `service_locator_firebase.module.dart`)
+  instead of the manual `ServiceLocatorFirebase.prepare()` (class removed).
+  Consumers wire it via
+  `externalPackageModulesBefore: [ExternalModule(FirebaseBasePackageModule)]`
+  in their `@InjectableInit`. `FirebaseBase.prepare()` no longer registers
+  services — it only initializes them and must be called AFTER the consumer's
+  `getIt.init()`.
+
 ## 0.1.9
 
 * Firebase Messaging - optional `channelKey` parameter for the Android
