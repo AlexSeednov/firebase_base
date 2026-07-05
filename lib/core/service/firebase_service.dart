@@ -4,7 +4,7 @@ import 'package:firebase_base/core/service/crashlytics_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:injectable/injectable.dart';
 
-/// Singleton
+///
 @lazySingleton
 final class FirebaseService {
   /// Name for logging

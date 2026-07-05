@@ -7,8 +7,6 @@ import 'package:injectable/injectable.dart';
 ///
 typedef HandleMessage = void Function(String? message);
 
-/// Singleton
-///
 /// Used only for Android
 @lazySingleton
 final class LocalNotificationsService {
@@ -92,8 +90,6 @@ final class LocalNotificationsService {
   /// to the Flutter engine that the dart address will be called from native
   /// and should be preserved
   @pragma('vm:entry-point')
-  static Future<void> _onActionReceivedMethod(
-    ReceivedAction data,
-  ) async =>
+  static Future<void> _onActionReceivedMethod(ReceivedAction data) async =>
       _handleMessage?.call(data.payload?[_payloadField]);
 }

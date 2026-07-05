@@ -9,8 +9,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:injectable/injectable.dart';
 import 'package:rxdart/rxdart.dart';
 
-/// Singleton
-///
 /// Messages have different behaviour depends on application state and OS.
 /// Application state can be:
 ///
