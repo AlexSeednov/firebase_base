@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: ^0.2.3
+    version: ^0.2.4
 
   # Not supported: Linux | MacOS | Web | Windows
   #
@@ -72,17 +72,6 @@ dev_dependencies:
 
   # dart run build_runner build
   json_serializable: ^6.14.0
-
-# TEMPORARY: the package is developed against the `upgrade` branch of
-# application_base (parallel Flutter 3.44.4 / packages upgrade). That branch is
-# not published to origin yet, so we resolve it via a local path override across
-# the graph until the updated tag is released. After the tag is out — remove the
-# override and bump the application_base dependency version.
-dependency_overrides:
-  application_base:
-    git:
-      url: https://github.com/AlexSeednov/application_base
-      ref: upgrade
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
