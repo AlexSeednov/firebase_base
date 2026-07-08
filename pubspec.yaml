@@ -1,6 +1,6 @@
 name: firebase_base
 description: "Unified base Firebase integration for Flutter applications"
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/AlexSeednov/firebase_base
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -10,48 +10,48 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
   # Flutter SDK supported versions
-  flutter: '>=3.35.4'
+  flutter: '>=3.44.4'
 
   # Dart SDK supported versions
   # https://docs.flutter.dev/release/archive
-  sdk: '>=3.9.2'
+  sdk: '>=3.12.2'
 
-# Last update - 29.01.2026
+# Last update - 05.07.2026
 dependencies:
   # All platform supported
   application_base:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: ^0.2.3
+    version: ^0.2.4
 
   # Not supported: Linux | MacOS | Web | Windows
   #
   # Awesome plugins for local notifications
-  awesome_notifications: ^0.10.1 # This version is managed by core plugin
+  awesome_notifications: ^0.12.1 # This version is managed by core plugin
   awesome_notifications_core: ^0.10.1
 
   # Not supported: Linux
-  firebase_core: ^4.4.0
+  firebase_core: ^4.11.0
 
   # Not supported: Linux | Web | Windows
-  firebase_crashlytics: ^5.0.7
+  firebase_crashlytics: ^5.2.4
 
   # Not supported: Linux | Windows
-  firebase_messaging: ^16.1.1
+  firebase_messaging: ^16.4.1
 
   # Base SDK
   flutter:
     sdk: flutter
 
   # All platform supported
-  injectable: ^2.7.1
+  injectable: ^3.0.0
 
   # All platform supported
-  intl: ^0.20.2
+  intl: ^0.20.3
 
   # All platform supported
-  json_annotation: ^4.10.0
+  json_annotation: ^4.12.0
 
   # All platform supported
   meta: ^1.16.0
@@ -61,17 +61,17 @@ dependencies:
 
 #
 dev_dependencies:
-  build_runner: ^2.10.5
+  build_runner: ^2.15.0
 
   #
   flutter_test:
     sdk: flutter
 
-  # dart run build_runner build --delete-conflicting-outputs
-  injectable_generator: ^2.12.0
+  # dart run build_runner build
+  injectable_generator: ^3.1.0
 
-  # dart run build_runner build --delete-conflicting-outputs
-  json_serializable: ^6.12.0
+  # dart run build_runner build
+  json_serializable: ^6.14.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

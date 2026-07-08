@@ -1,4 +1,3 @@
-//@GeneratedMicroModule;FirebaseBasePackageModule;package:firebase_base/core/service/service_locator_firebase.module.dart
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 // coverage:ignore-file

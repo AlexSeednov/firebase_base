@@ -1,3 +1,15 @@
+## 0.2.1
+
+* Updates minimum supported SDK version to Flutter 3.44.4/Dart 3.12.2
+* Updates all packages to actual versions
+* Migrates dependency injection to **injectable 3.x**: micro-packages are now
+  registered exclusively via `externalPackageModulesBefore` /
+  `externalPackageModulesAfter` (the removed `includeMicroPackages` mechanism).
+  The package already wires `FirebaseBasePackageModule` this way, so its public
+  API is unchanged — the generated `service_locator_firebase.module.dart` simply
+  drops the legacy `//@GeneratedMicroModule` marker.
+* Updates **Application Base** to version 0.2.4
+
 ## 0.2.0
 
 * **BREAKING — DI moved to injectable.** The package now registers its own
