@@ -58,7 +58,35 @@ final class FirebaseMessagingService with LoggingMixin {
   String? get apnsToken => _apnsToken;
 
   /// Main instance for messaging via Firebase
-  late FirebaseMessaging? _messaging;
+  FirebaseMessaging? _messaging;
+
+  /// Messaging instance for the paths that are only reachable after a
+  /// successful [prepare] — a missing instance there is a programming error,
+  /// not a runtime condition to branch on.
+  FirebaseMessaging get _requireMessaging {
+    final FirebaseMessaging? messaging = _messaging;
+    if (messaging == null) {
+      throw StateError(
+        'FCM instance is null. '
+        'Did you forget to call FirebaseMessagingService->prepare?',
+      );
+    }
+    return messaging;
+  }
+
+  /// Guards against a second [prepare]: the stream listeners below are not
+  /// idempotent, a repeated call would stack a second set on top of the first
+  /// and every push would be handled twice.
+  bool _isPrepared = false;
+
+  /// Foreground messages listener - Android only, see [prepare]
+  StreamSubscription<RemoteMessage>? _foregroundSubscription;
+
+  /// Token refresh listener
+  StreamSubscription<String>? _tokenRefreshSubscription;
+
+  /// Listener of the pushes that opened the application
+  StreamSubscription<RemoteMessage>? _openedSubscription;
 
   /// Stream for listening route from push
   final pushSubject = BehaviorSubject<Map<String, dynamic>>();
@@ -78,6 +106,11 @@ final class FirebaseMessagingService with LoggingMixin {
     String? channelKey,
     String? icon,
   }) async {
+    if (_isPrepared) {
+      logNamedInfo(info: 'already initialized');
+      return true;
+    }
+
     try {
       /// Init messaging instance
       _messaging = FirebaseMessaging.instance;
@@ -85,7 +118,7 @@ final class FirebaseMessagingService with LoggingMixin {
       /// Platform-specific castomization
       if (isIOS) {
         /// Activate foreground messaging for iOS
-        await _messaging!.setForegroundNotificationPresentationOptions(
+        await _requireMessaging.setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
           sound: true,
@@ -99,7 +132,9 @@ final class FirebaseMessagingService with LoggingMixin {
           channelKey: channelKey,
           icon: icon,
         );
-        FirebaseMessaging.onMessage.listen(_onForegroundListen);
+        _foregroundSubscription = FirebaseMessaging.onMessage.listen(
+          _onForegroundListen,
+        );
       }
 
       ///
@@ -112,24 +147,42 @@ final class FirebaseMessagingService with LoggingMixin {
       }
 
       /// Any time the token refreshes, need to get it
-      _messaging!.onTokenRefresh.listen(_tokenChanged);
+      _tokenRefreshSubscription = _requireMessaging.onTokenRefresh.listen(
+        _tokenChanged,
+      );
 
       ///
       unawaited(_onInitializationHandle());
-      FirebaseMessaging.onMessageOpenedApp.listen(_onOpenedListen);
+      _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
+        _onOpenedListen,
+      );
     } catch (e) {
       logNamedError(error: 'initialization exception: $e');
       return false;
     }
 
     /// Success
+    _isPrepared = true;
     logNamedInfo(info: 'initialized');
     return true;
   }
 
-  ///
-  void dispose() {
-    pushSubject.close();
+  /// Annotation is required: without it getIt owns the instance but never
+  /// releases its listeners, so a container reset leaks them into the
+  /// following one.
+  @disposeMethod
+  Future<void> dispose() async {
+    await _foregroundSubscription?.cancel();
+    await _tokenRefreshSubscription?.cancel();
+    await _openedSubscription?.cancel();
+    _foregroundSubscription = null;
+    _tokenRefreshSubscription = null;
+    _openedSubscription = null;
+
+    await pushSubject.close();
+
+    _messaging = null;
+    _isPrepared = false;
   }
 
   /// Log as errors only if [lastTry] is true, log as information otherwise
@@ -137,7 +190,7 @@ final class FirebaseMessagingService with LoggingMixin {
     try {
       if (isIOS) {
         /// APNs token is available only on iOS
-        _apnsToken = await _messaging!.getAPNSToken();
+        _apnsToken = await _requireMessaging.getAPNSToken();
         if (_apnsToken == null) {
           /// Do not log it as error to provide better logs
           logNamedInfo(info: 'apnsToken is null');
@@ -147,7 +200,7 @@ final class FirebaseMessagingService with LoggingMixin {
       }
 
       /// Get unique firebase token
-      _token = await _messaging!.getToken() ?? '';
+      _token = await _requireMessaging.getToken() ?? '';
       if (_token.isEmpty) {
         if (lastTry) {
           logNamedError(error: 'FCM token is empty');
@@ -169,8 +222,12 @@ final class FirebaseMessagingService with LoggingMixin {
   }
 
   ///
+  /// Unlike the rest of the instance users this one is called from the
+  /// application flow, where a not-yet-prepared messaging is a legitimate
+  /// state - report it instead of throwing.
   Future<AuthorizationStatus> requestPermission() async {
-    if (_messaging == null) {
+    final FirebaseMessaging? messaging = _messaging;
+    if (messaging == null) {
       logNamedError(
         error:
             'FCM instance is null. '
@@ -179,7 +236,7 @@ final class FirebaseMessagingService with LoggingMixin {
       return AuthorizationStatus.notDetermined;
     }
 
-    final NotificationSettings settings = await _messaging!.requestPermission();
+    final NotificationSettings settings = await messaging.requestPermission();
     logNamedInfo(
       info: 'User granted permission: ${settings.authorizationStatus}',
     );
@@ -188,7 +245,7 @@ final class FirebaseMessagingService with LoggingMixin {
 
   /// User pressed on push and application opened from Terminated state
   Future<void> _onInitializationHandle() async {
-    final RemoteMessage? message = await _messaging!.getInitialMessage();
+    final RemoteMessage? message = await _requireMessaging.getInitialMessage();
     if (message == null) return;
 
     /// Create data from message
@@ -221,10 +278,33 @@ final class FirebaseMessagingService with LoggingMixin {
     logNamedInfo(info: 'Got push "${pushEntity.title}" in Foreground state');
 
     ///
-    getIt<LocalNotificationsService>().show(
-      pushEntity: pushEntity,
-      picture: message.notification?.android?.imageUrl,
+    unawaited(
+      _showForegroundNotification(
+        pushEntity: pushEntity,
+        picture: message.notification?.android?.imageUrl,
+      ),
     );
+  }
+
+  /// Nothing waits for the banner, but the failure must not escape as an
+  /// unhandled asynchronous error: it would reach the crash reporter and get
+  /// counted as a crash, while an unreachable [picture] only costs the push
+  /// its illustration.
+  Future<void> _showForegroundNotification({
+    required PushEntity pushEntity,
+    String? picture,
+  }) async {
+    try {
+      final bool isShown = await getIt<LocalNotificationsService>().show(
+        pushEntity: pushEntity,
+        picture: picture,
+      );
+      if (!isShown) {
+        logNamedError(error: 'Foreground notification was not shown');
+      }
+    } catch (e) {
+      logNamedError(error: 'Foreground notification exception: $e');
+    }
   }
 
   /// User pressed on push and application opened from Foreground state
@@ -255,6 +335,14 @@ final class FirebaseMessagingService with LoggingMixin {
   void _handleMessage(PushEntity pushEntity) {
     logNamedInfo(info: 'Handle push');
 
+    /// The Android foreground path arrives through a static callback in
+    /// [LocalNotificationsService], which can outlive this instance - adding
+    /// to an already closed subject would throw.
+    if (pushSubject.isClosed) {
+      logNamedInfo(info: 'Push after dispose, ignored');
+      return;
+    }
+
     /// Check push's `data` field and try to get useful information from there
     final Map<String, dynamic>? payload = pushEntity.data;
 
@@ -269,7 +357,6 @@ final class FirebaseMessagingService with LoggingMixin {
 
   /// Token changed listener
   // It can not be a setter because it's using as callback
-  // ignore: use_setters_to_change_properties
   void _tokenChanged(String newToken) {
     _token = newToken;
     onTokenChanged?.call(_token);

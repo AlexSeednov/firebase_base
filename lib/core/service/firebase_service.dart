@@ -15,13 +15,22 @@ final class FirebaseService {
   /// Name for logging
   static const String _logName = 'Firebase Service';
 
-  ///
-  Future<void> prepare({FirebaseOptions? options}) async {
-    await Firebase.initializeApp(options: options);
+  /// Reports a failure instead of throwing: a missing or malformed native
+  /// configuration must cost the application its telemetry, not its launch.
+  Future<bool> prepare({FirebaseOptions? options}) async {
+    try {
+      await Firebase.initializeApp(options: options);
+    } catch (e) {
+      logError(error: '$_logName initialization exception: $e');
+      return false;
+    }
 
-    /// Need to do here to start logger as soon as possible
+    /// Need to do here to start logger as soon as possible.
+    /// Only after a successful initialization - Crashlytics has no instance
+    /// to bind its handlers to otherwise.
     getIt<CrashlyticsService>().prepare();
 
     logInfo(info: '$_logName prepared');
+    return true;
   }
 }

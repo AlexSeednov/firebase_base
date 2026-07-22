@@ -5,6 +5,8 @@ import 'package:firebase_base/core/service/firebase_service.dart';
 // package's own FirebaseService; only FirebaseOptions is needed from here.
 import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 
+/// Entry point for the package's start-up: Firebase core, Crashlytics,
+/// messaging and local notifications.
 abstract final class FirebaseBase {
   /// **name** - Android application name for system notification settings
   ///
@@ -27,17 +29,25 @@ abstract final class FirebaseBase {
   /// module `FirebaseBasePackageModule` (wired via
   /// `externalPackageModulesBefore` in the consumer's `@InjectableInit`), so
   /// this method must be called AFTER the consumer's `getIt.init()`.
-  static Future<void> prepare({
+  ///
+  /// Returns whether every part started up. Nothing here throws: a broken
+  /// Firebase setup degrades the application instead of blocking its launch,
+  /// so the caller decides what an unavailable Firebase means for it.
+  static Future<bool> prepare({
     required String name,
     String? channelKey,
     String? icon,
     FirebaseOptions? options,
   }) async {
     /// Prepare all Firebase packages
-    await getIt<FirebaseService>().prepare(options: options);
+    final bool isCoreReady = await getIt<FirebaseService>().prepare(
+      options: options,
+    );
 
-    ///
-    await getIt<FirebaseMessagingService>().prepare(
+    /// Messaging has nothing to attach to without the core
+    if (!isCoreReady) return false;
+
+    return getIt<FirebaseMessagingService>().prepare(
       name: name,
       channelKey: channelKey,
       icon: icon,
