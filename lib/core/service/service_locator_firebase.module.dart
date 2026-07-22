@@ -14,15 +14,20 @@ import 'package:firebase_base/core/service/local_notifications_service.dart'
 import 'package:injectable/injectable.dart' as _i526;
 
 class FirebaseBasePackageModule extends _i526.MicroPackageModule {
-// initializes the registration of main-scope dependencies inside of GetIt
+  // initializes the registration of main-scope dependencies inside of GetIt
   @override
   _i687.FutureOr<void> init(_i526.GetItHelper gh) {
     gh.lazySingleton<_i735.CrashlyticsService>(
-        () => _i735.CrashlyticsService());
+      () => _i735.CrashlyticsService(),
+    );
     gh.lazySingleton<_i570.FirebaseMessagingService>(
-        () => _i570.FirebaseMessagingService());
+      () => _i570.FirebaseMessagingService(),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i466.FirebaseService>(() => _i466.FirebaseService());
     gh.lazySingleton<_i35.LocalNotificationsService>(
-        () => _i35.LocalNotificationsService());
+      () => _i35.LocalNotificationsService(),
+      dispose: (i) => i.dispose(),
+    );
   }
 }

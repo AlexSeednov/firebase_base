@@ -1,6 +1,7 @@
+# Last full SDK + dependency audit - 05.07.2026
 name: firebase_base
 description: "Unified base Firebase integration for Flutter applications"
-version: 0.2.1
+version: 0.2.2
 homepage: https://github.com/AlexSeednov/firebase_base
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -10,20 +11,23 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
   # Flutter SDK supported versions
+  # Pinned packages
+  # https://github.com/flutter/flutter/blob/3.44.4/packages/flutter/pubspec.yaml
+  # https://github.com/flutter/flutter/blob/stable/CHANGELOG.md
   flutter: '>=3.44.4'
 
   # Dart SDK supported versions
   # https://docs.flutter.dev/release/archive
+  # https://dart.googlesource.com/sdk/+/stable/CHANGELOG.md
   sdk: '>=3.12.2'
 
-# Last update - 05.07.2026
 dependencies:
   # All platform supported
   application_base:
     git:
       url: https://github.com/AlexSeednov/application_base
       tag_pattern: v{{version}}
-    version: ^0.2.4
+    version: ^0.2.7
 
   # Not supported: Linux | MacOS | Web | Windows
   #

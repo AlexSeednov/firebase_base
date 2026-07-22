@@ -1,3 +1,34 @@
+## 0.2.2
+
+* Updates **Application Base** to version 0.2.7 and adopts its refreshed
+  analyzer rule set
+* Firebase Messaging - `dispose` now cancels the foreground, token-refresh and
+  message-opened subscriptions instead of only closing `pushSubject`, and is
+  annotated with `@disposeMethod`, so getIt actually calls it on a container
+  reset. Previously the listeners survived the reset and stacked up
+* Firebase Messaging - `prepare` became idempotent: a repeated call is a no-op
+  instead of installing a second set of listeners that handled every push twice
+* Firebase Messaging - the messaging instance is no longer `late` and nullable
+  at once; the force-unwraps are replaced by a guard that reports a missing
+  `prepare` explicitly. `requestPermission` keeps returning `notDetermined`
+* Local Notifications - releases its static tap handler on dispose; a push
+  tapped after a container reset no longer reaches the previous service
+* Firebase Service - `prepare` no longer lets a failed `Firebase.initializeApp`
+  escape: a missing or malformed native configuration now costs the application
+  its telemetry instead of its launch. Crashlytics handlers are installed only
+  after a successful initialization
+* `FirebaseBase.prepare` returns whether every part started up (previously the
+  messaging result was dropped) and skips messaging when the core failed
+* Local Notifications - a foreground notification id is derived from the FCM
+  message id instead of the entity's identity hash, so a redelivered push
+  updates its banner instead of stacking a duplicate next to it
+* Local Notifications - `show` before `prepare` logs and returns `false`
+  instead of throwing a `LateInitializationError`
+* Firebase Messaging - a failed foreground notification is logged instead of
+  escaping as an unhandled asynchronous error, which the crash reporter used
+  to count as a crash (an unreachable push image was enough to trigger it)
+* Adds a CI workflow (format, analyze, codegen and DI-cycle checks)
+
 ## 0.2.1
 
 * Updates minimum supported SDK version to Flutter 3.44.4/Dart 3.12.2

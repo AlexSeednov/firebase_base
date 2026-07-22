@@ -65,8 +65,9 @@ macos
 windows
 
 # FVM Version Cache
+# .fvmrc is intentionally NOT ignored: it pins the Flutter version and must
+# be shared with everyone building the package.
 .fvm/
-.fvmrc
 
 # Dev tools
 devtools_options.yaml
