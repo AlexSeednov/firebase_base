@@ -1,3 +1,23 @@
+## 0.2.3
+
+* `FirebaseBase.prepare` takes `isCrashlyticsEnabled`, so an application that
+  reports crashes elsewhere can keep messaging and drop crash reporting.
+  Previously `FirebaseService.prepare` installed the Crashlytics handlers
+  unconditionally and the two were inseparable — every crash was paid for
+  twice and split across two dashboards.
+
+* Turning the flag off does not merely skip the handlers: `CrashlyticsService`
+  gained `disable()`, which calls `setCrashlyticsCollectionEnabled(false)`. The
+  native SDK begins collecting together with `Firebase.initializeApp`, so
+  without the explicit opt-out native crashes kept reaching Firebase while the
+  app believed it had left. The setting persists between launches, which is why
+  it is written on every start rather than once.
+
+* Updates **Application Base** to version 0.2.8. `CrashlyticsService` already
+  declared the stack trace parameter its error sink now officially receives, so
+  the trace reaches `recordError` instead of the synthesised date-only trace
+  whenever the caller supplies one.
+
 ## 0.2.2
 
 * Updates **Application Base** to version 0.2.7 and adopts its refreshed

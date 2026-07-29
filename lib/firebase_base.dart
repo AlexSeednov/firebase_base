@@ -25,6 +25,12 @@ abstract final class FirebaseBase {
   /// **options** - Specific Firebase configuration options depends on current
   /// platform and flavor
   ///
+  /// **isCrashlyticsEnabled** - whether crash reporting stays with Firebase.
+  /// Pass `false` when the application already reports crashes through another
+  /// tool: messaging and the rest of Firebase keep working, while Crashlytics
+  /// stops collecting instead of duplicating every crash into a second
+  /// dashboard.
+  ///
   /// Registration of the package's services is performed by the injectable
   /// module `FirebaseBasePackageModule` (wired via
   /// `externalPackageModulesBefore` in the consumer's `@InjectableInit`), so
@@ -38,10 +44,12 @@ abstract final class FirebaseBase {
     String? channelKey,
     String? icon,
     FirebaseOptions? options,
+    bool isCrashlyticsEnabled = true,
   }) async {
     /// Prepare all Firebase packages
     final bool isCoreReady = await getIt<FirebaseService>().prepare(
       options: options,
+      isCrashlyticsEnabled: isCrashlyticsEnabled,
     );
 
     /// Messaging has nothing to attach to without the core
