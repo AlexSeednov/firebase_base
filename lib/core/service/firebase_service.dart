@@ -17,7 +17,15 @@ final class FirebaseService {
 
   /// Reports a failure instead of throwing: a missing or malformed native
   /// configuration must cost the application its telemetry, not its launch.
-  Future<bool> prepare({FirebaseOptions? options}) async {
+  ///
+  /// [isCrashlyticsEnabled] `false` leaves messaging and the rest of Firebase
+  /// intact while handing crash reporting over to another tool — the two are
+  /// independent, and an app reporting to both would pay twice for the same
+  /// crash and see it split across dashboards.
+  Future<bool> prepare({
+    FirebaseOptions? options,
+    bool isCrashlyticsEnabled = true,
+  }) async {
     try {
       await Firebase.initializeApp(options: options);
     } catch (e) {
@@ -28,7 +36,12 @@ final class FirebaseService {
     /// Need to do here to start logger as soon as possible.
     /// Only after a successful initialization - Crashlytics has no instance
     /// to bind its handlers to otherwise.
-    getIt<CrashlyticsService>().prepare();
+    final CrashlyticsService crashlytics = getIt<CrashlyticsService>();
+    if (isCrashlyticsEnabled) {
+      crashlytics.prepare();
+    } else {
+      await crashlytics.disable();
+    }
 
     logInfo(info: '$_logName prepared');
     return true;

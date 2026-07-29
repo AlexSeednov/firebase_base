@@ -115,6 +115,24 @@ Based on [firebase_crashlytics](https://pub.dev/packages/firebase_crashlytics).
 
 All necessary data will be initiated by using `FirebaseBase -> prepare`. 
 
+If the application reports crashes through another tool, turn Crashlytics off
+and keep the rest of Firebase:
+
+```dart
+await FirebaseBase.prepare(
+  name: applicationName,
+  isCrashlyticsEnabled: false,
+);
+```
+
+The flag does more than skip the Dart handlers: the native SDK starts
+collecting together with `Firebase.initializeApp`, so the package also calls
+`setCrashlyticsCollectionEnabled(false)` — otherwise native crashes would keep
+reaching Firebase after the app moved on. The setting persists across launches,
+so an app that switches back gets its reporting restored by the `true` branch.
+Remove the *Crashlytics Upload Symbols* build phase from the iOS project as
+well, or the build keeps uploading dSYM files to a project nobody reads.
+
 ## Firebase Cloud Messaging
 
 Based on [firebase_messaging](https://pub.dev/packages/firebase_messaging).

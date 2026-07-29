@@ -33,6 +33,22 @@ final class CrashlyticsService {
     logInfo(info: '$_logName prepared');
   }
 
+  /// Silences Crashlytics for an application that reports crashes elsewhere.
+  ///
+  /// Skipping [prepare] is not enough: the native SDK starts collecting with
+  /// `Firebase.initializeApp` on its own, so native crashes would keep flowing
+  /// to Firebase while the app believes it left. The flag is persisted by the
+  /// SDK across launches, hence the unconditional write rather than a
+  /// one-time opt-out.
+  Future<void> disable() async {
+    try {
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+      logInfo(info: '$_logName disabled');
+    } catch (e) {
+      logError(error: '$_logName disabling exception: $e');
+    }
+  }
+
   /// Log event in log trace with log time
   void _logInfo({required String information}) => FirebaseCrashlytics.instance
       .log('${_timeFormat.format(DateTime.now().toUtc())} - $information');
