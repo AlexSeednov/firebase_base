@@ -1,3 +1,13 @@
+## 0.2.4
+
+* Local Notifications - the notification channel named a channel group that was
+  never registered, so every Android launch logged an error-level "Channel
+  group ... does not exist" with a full stack trace. Nothing broke: the native
+  side registers the exception, drops the grouping and creates the channel
+  anyway, so the only real effects were the noise in the logs and a channel
+  left ungrouped in the system notification settings. The group is now passed
+  to `initialize` alongside the channel.
+
 ## 0.2.3
 
 * `FirebaseBase.prepare` takes `isCrashlyticsEnabled`, so an application that

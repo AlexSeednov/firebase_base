@@ -65,19 +65,36 @@ final class LocalNotificationsService {
     final String key = channelKey ?? '$name-notifications';
     _channelKey = key;
 
+    /// A channel that names a group has to be registered together with that
+    /// group: Android resolves [NotificationChannel.channelGroupKey] against
+    /// the groups passed to [AwesomeNotifications.initialize]. Finding none it
+    /// registers a "Channel group ... does not exist" exception, drops the
+    /// grouping and still creates the channel - so the cost is an error-level
+    /// log with a stack trace on every launch and a channel that sits
+    /// ungrouped in the system notification settings, not a broken push.
+    final String groupKey = '$key-group';
+
     /// Prepare settings
     final androidLocalChannel = NotificationChannel(
-      channelGroupKey: '$key-group',
+      channelGroupKey: groupKey,
       channelKey: key,
       channelName: '$name Push Notification',
       channelDescription: 'Notification channel for informing user',
       importance: NotificationImportance.Max,
     );
 
+    /// Groups the channel under the application name in the system
+    /// notification settings
+    final androidLocalChannelGroup = NotificationChannelGroup(
+      channelGroupKey: groupKey,
+      channelGroupName: name,
+    );
+
     await _instance.initialize(
       // Monochrome small icon; null falls back to the default application icon
       icon,
       [androidLocalChannel],
+      channelGroups: [androidLocalChannelGroup],
     );
 
     await _instance.setListeners(
