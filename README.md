@@ -28,9 +28,33 @@ For now includes:
 
 * Android
 * iOS
+* Web — compiles and launches, but with limitations, see 
+  [Web support](#web-support)
 
 All other not supported because of 
 [awesome_notifications](https://pub.dev/packages/awesome_notifications)
+
+## Web support
+
+The package compiles and runs on web, degrading to the necessary minimum:
+
+* **Firebase Core** — initializes only when explicit `FirebaseOptions` are 
+  passed to `FirebaseBase.prepare`: on web there is no native config file to 
+  read them from. Without them the whole Firebase stack is skipped cleanly 
+  (with an info log).
+* **Crashlytics** — not supported by FlutterFire on web at all (the plugin 
+  does not even compile there). Inside the package the SDK is isolated behind 
+  a conditional import (`CrashlyticsReporter`) and replaced with a silent 
+  no-op on web; the global error handlers and the remote logger are left 
+  untouched.
+* **Cloud Messaging** — technically possible on web (FCM Web Push), but not 
+  implemented yet: it requires a `firebase-messaging-sw.js` service worker in 
+  the consuming application and a VAPID key for `getToken`. For now `prepare` 
+  skips messaging on web with an info log. Browser-side limitations to keep 
+  in mind: pushes are displayed by the browser itself, and Safari on iOS 
+  delivers them only to a PWA installed on the home screen.
+* **Local notifications** — `awesome_notifications` is used only on the 
+  Android foreground path and is never touched on web.
 
 ## Requirements 
 

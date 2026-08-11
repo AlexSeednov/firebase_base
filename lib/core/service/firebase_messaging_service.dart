@@ -106,6 +106,14 @@ final class FirebaseMessagingService with LoggingMixin {
     String? channelKey,
     String? icon,
   }) async {
+    // Future(AlexSeednov): FCM on web needs a `firebase-messaging-sw.js`
+    // service worker in the application and a VAPID key passed to `getToken`;
+    // wire both here when web pushes are needed.
+    if (isWeb) {
+      logNamedInfo(info: 'is not supported on web yet, skipped');
+      return false;
+    }
+
     if (_isPrepared) {
       logNamedInfo(info: 'already initialized');
       return true;
@@ -226,6 +234,13 @@ final class FirebaseMessagingService with LoggingMixin {
   /// application flow, where a not-yet-prepared messaging is a legitimate
   /// state - report it instead of throwing.
   Future<AuthorizationStatus> requestPermission() async {
+    /// Messaging never prepares on web - see [prepare]; an info instead of the
+    /// error below, because on web this state is expected, not a mistake
+    if (isWeb) {
+      logNamedInfo(info: 'permission request skipped on web');
+      return AuthorizationStatus.notDetermined;
+    }
+
     final FirebaseMessaging? messaging = _messaging;
     if (messaging == null) {
       logNamedError(

@@ -1,4 +1,5 @@
 import 'package:application_base/core/service/logger_service.dart';
+import 'package:application_base/core/service/platform_service.dart';
 import 'package:application_base/core/service/service_locator.dart';
 import 'package:firebase_base/core/service/crashlytics_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,6 +27,16 @@ final class FirebaseService {
     FirebaseOptions? options,
     bool isCrashlyticsEnabled = true,
   }) async {
+    /// On web there is no native config file to read the options from, so
+    /// without explicit [options] initialization is guaranteed to fail - skip
+    /// cleanly instead of paying for the exception
+    if (isWeb && options == null) {
+      logInfo(
+        info: '$_logName: web requires explicit FirebaseOptions, skipped',
+      );
+      return false;
+    }
+
     try {
       await Firebase.initializeApp(options: options);
     } catch (e) {
