@@ -1,3 +1,17 @@
+## 0.2.5
+
+* Web support: the package now compiles and launches on web.
+  `firebase_crashlytics` has no web implementation and previously broke the
+  web build of any consumer; its SDK calls are isolated behind a conditional
+  import (`CrashlyticsReporter`) and replaced with a silent no-op on web.
+
+* `FirebaseService.prepare` skips initialization on web when no explicit
+  `FirebaseOptions` are passed (there is no native config file to read them
+  from), `FirebaseMessagingService.prepare` skips messaging on web until FCM
+  Web Push (service worker + VAPID key) is wired, and `requestPermission`
+  reports the skip with an info instead of an error. See the new "Web support"
+  section in the README for the full list of limitations.
+
 ## 0.2.4
 
 * Local Notifications - the notification channel named a channel group that was
