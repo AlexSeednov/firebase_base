@@ -1,3 +1,10 @@
+## 0.2.6
+
+* Updates **Application Base** to version 0.3.0 (adds
+  `UrlLauncher.launchLinkInSameTab`; nothing in this package changes). Without
+  the widened constraint any consumer of both packages could not resolve its
+  dependency graph: the previous `^0.2.8` excluded application_base 0.3.0.
+
 ## 0.2.5
 
 * Web support: the package now compiles and launches on web.
