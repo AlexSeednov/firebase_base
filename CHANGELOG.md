@@ -1,3 +1,10 @@
+## 0.2.7
+
+* **`application_base` constraint widened to `>=0.3.0 <0.5.0`.** The caret
+  stopped at 0.4.0, so an application that had moved to the new minor line
+  could not resolve this package at all. Nothing here uses anything past
+  0.3.0, and both lines in use across the applications now resolve.
+
 ## 0.2.6
 
 * Updates **Application Base** to version 0.3.0 (adds
