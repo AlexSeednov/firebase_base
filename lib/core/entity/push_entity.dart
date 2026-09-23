@@ -5,7 +5,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'push_entity.g.dart';
 
-/// Getted push data
+/// A received push. Serializable, so the Android foreground path can carry it
+/// through a local notification's payload and read it back.
 @JsonSerializable(createFactory: true, createToJson: true)
 final class PushEntity {
   ///
@@ -23,11 +24,11 @@ final class PushEntity {
     ..contentAvailable = message.contentAvailable
     ..data = message.data;
 
-  /// Convert data from JSON
+  ///
   factory PushEntity.fromJson(Map<String, dynamic> json) =>
       _$PushEntityFromJson(json);
 
-  /// Parse data from JSON string
+  /// Reverse of [toString].
   factory PushEntity.fromString(String data) =>
       PushEntity.fromJson(jsonDecode(data) as Map<String, dynamic>);
 
@@ -67,10 +68,10 @@ final class PushEntity {
   @JsonKey(name: 'data')
   Map<String, dynamic>? data;
 
-  /// Convert data to Json
+  ///
   Map<String, dynamic> toJson() => _$PushEntityToJson(this);
 
-  /// Convert data to String in JSON format
+  /// JSON, so [PushEntity.fromString] can read it back.
   @override
   String toString() => json.encode(toJson());
 }

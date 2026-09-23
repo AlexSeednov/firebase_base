@@ -9,6 +9,28 @@
   collection unconditionally, as `disable` has always disabled it. An
   application that never turned Crashlytics off sees no difference.
 
+* **Unhandled asynchronous errors show in the debug console.**
+  `PlatformDispatcher.onError` returns `true`, which mutes the engine's own
+  print, and the report went to the SDK without printing either: in debug such
+  an error appeared nowhere. It is logged by hand now, in debug only — outside
+  it the logger would report the error a second time.
+
+* **`FirebaseMessagingService.requestPermission` never throws.** A failed
+  request escaped to the caller, and an application that calls it unawaited
+  got an unhandled error, which the crash reporter counts as a crash. The
+  failure is logged now and answered with `AuthorizationStatus.notDetermined`,
+  as a call before `prepare` already was.
+
+* **A failure to read the push that launched the application is logged.**
+  `getInitialMessage` runs unawaited in `prepare`, so its failure escaped as an
+  unhandled error and was counted as a crash.
+
+* **Crashlytics log time stamps are pinned to `en_US`**, like the date next to
+  them. `DateFormat.Hms()` took the locale current when the service was
+  created. Today that happens before the interface locale is resolved, but a
+  service created later would stamp in the interface language — or throw,
+  had that locale's date symbols not been loaded yet.
+
 * **README in Russian** — `README.ru.md`, a full translation of `README.md`,
   with a language switcher at the top of both. The English file stays the
   source of truth, and every README change is made in both files at once.
@@ -26,6 +48,15 @@
   messaging section are split into short paragraphs, with sub-headings for
   the token, the payload and the permission. The Russian text is rewritten
   the same way, without the calques it had picked up in translation.
+
+* **Every comment in the package reviewed** — `lib/`, `pubspec.yaml` and
+  `analysis_options.yaml`. Comments that retold the code are gone, wordy ones
+  are cut down to the reason they carry, and the missing reasons are added:
+  why `pushSubject` replays the latest payload to a new listener, why the
+  Crashlytics flag is written on every launch, why a notification id comes
+  from the message. Comments that contradicted the code are corrected — the
+  foreground listener was described as a tap on a push, while it handles a
+  push that arrives. No code changes.
 
 ## 0.2.7
 

@@ -11,39 +11,42 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 
-///
+/// Crash reporting to Firebase Crashlytics: the application logger, the
+/// global error handlers and the collection flag. Not available on the web.
 @lazySingleton
 final class CrashlyticsService {
   ///
   @visibleForTesting
   CrashlyticsService();
 
-  /// Name for logging
+  ///
   static const String _logName = 'Crashlytics Service';
 
-  /// SDK facade; on web resolves to a no-op stub (see conditional import).
+  /// A no-op stub on the web, see the conditional import.
   final CrashlyticsReporter _reporter = createCrashlyticsReporter();
 
-  /// Common using date format
+  /// Date in the stack of a report that has none, see [_logError].
+  ///
+  /// This and [_timeFormat] are pinned to `en_US`: a stamp read by a machine
+  /// must not change with the interface language, and the date symbols of
+  /// another locale may not be loaded yet when the service is created.
   final _dateFormat = DateFormat('yyyy/MM/dd', 'en_US');
 
-  /// Common using time format
-  final _timeFormat = DateFormat.Hms();
+  /// Time stamp of a log line, pinned like [_dateFormat].
+  final _timeFormat = DateFormat.Hms('en_US');
 
   ///
   void prepare() {
-    /// Crashlytics is not supported on web - keep the logger and the error
-    /// handlers untouched instead of binding them to a no-op sink
+    /// There is no Crashlytics on the web: the logger and the error handlers
+    /// stay as they are rather than feed a no-op
     if (isWeb) {
       logInfo(info: '$_logName is not supported on web, skipped');
       return;
     }
 
-    /// Set up logger functions
     logInfoRemote = _logInfo;
     logErrorRemote = _logError;
 
-    /// Start to handle and pass all crashes and uncaught errors to Crashlytics
     FlutterError.onError = _onFatalError;
     PlatformDispatcher.instance.onError = _onError;
 
@@ -52,10 +55,9 @@ final class CrashlyticsService {
     logInfo(info: '$_logName prepared');
   }
 
-  /// Undoes a [disable] of an earlier launch. The SDK persists the flag, so an
-  /// application that came back to Crashlytics would otherwise bind its
-  /// handlers to a collector that silently drops every report — the mirror of
-  /// the unconditional write in [disable].
+  /// Undoes a [disable] made on an earlier launch: the SDK persists the flag,
+  /// and without this write an application back on Crashlytics would feed a
+  /// collector that drops every report.
   Future<void> _enable() async {
     try {
       await _reporter.setCollectionEnabled(isEnabled: true);
@@ -66,13 +68,13 @@ final class CrashlyticsService {
 
   /// Silences Crashlytics for an application that reports crashes elsewhere.
   ///
-  /// Skipping [prepare] is not enough: the native SDK starts collecting with
-  /// `Firebase.initializeApp` on its own, so native crashes would keep flowing
-  /// to Firebase while the app believes it left. The flag is persisted by the
-  /// SDK across launches, hence the unconditional write rather than a
-  /// one-time opt-out.
+  /// Skipping [prepare] is not enough: the native SDK starts collecting on
+  /// `Firebase.initializeApp` by itself, and native crashes would keep going
+  /// to Firebase. Written on every launch rather than once: the SDK persists
+  /// the flag, and a [prepare] of an earlier launch may have turned it back
+  /// on.
   Future<void> disable() async {
-    /// No web SDK - there is nothing to silence
+    /// No SDK on the web — nothing to silence
     if (isWeb) {
       logInfo(info: '$_logName is not supported on web, nothing to disable');
       return;
@@ -86,26 +88,24 @@ final class CrashlyticsService {
     }
   }
 
-  /// Log event in log trace with log time
+  /// A line of the log attached to the next report, stamped with UTC time.
   void _logInfo({required String information}) => _reporter.log(
     '${_timeFormat.format(DateTime.now().toUtc())} - $information',
   );
 
-  /// Log error
+  /// A handled error from the application logger.
   Future<void> _logError({required String error, StackTrace? stack}) async {
-    /// Add current user ID
     if (loggerUserId.isNotEmpty) {
       await _reporter.setCustomKey('User ID', loggerUserId);
     }
 
-    /// Event's date - current in UTC
     final String date = _dateFormat.format(DateTime.timestamp());
 
-    /// Finally send error
     await _reporter.recordError(
       error,
-      // For better navigation in Crashlytics make expected errors
-      // with date instead of stack trace
+      // Crashlytics groups issues by stack, and the logger's own stack is the
+      // same for every error: a one-frame stack of the date and the text
+      // gives each error an issue of its own per day
       stack ?? StackTrace.fromString('#0 $date - $error (app.dart)'),
       reason: error,
       fatal: true,
@@ -113,14 +113,21 @@ final class CrashlyticsService {
     );
   }
 
-  /// Pass all crashes to Crashlytics
+  /// An error caught by the Flutter framework. The SDK prints it to the
+  /// console itself, so replacing the default handler loses nothing.
   void _onFatalError(FlutterErrorDetails errorDetails) =>
       _reporter.recordFlutterFatalError(errorDetails);
 
-  /// Pass all uncaught asynchronous errors that aren't handled
-  /// by the Flutter framework to Crashlytics. Should be sent via
-  /// the SDK directly for better and more stable flow.
+  /// An uncaught asynchronous error outside the Flutter framework; `true`
+  /// marks it handled.
   bool _onError(Object error, StackTrace stack) {
+    /// Returning `true` mutes the engine's own print, and the report is sent
+    /// without one, so in debug the error is logged by hand. In debug only:
+    /// outside it the logger would report the error a second time
+    if (isDebug) {
+      logError(error: '$_logName unhandled: $error', stack: stack);
+    }
+
     _reporter.recordError(error, stack, fatal: true);
     return true;
   }

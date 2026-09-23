@@ -8,9 +8,9 @@ import 'package:flutter/foundation.dart';
 /// implementation files.
 CrashlyticsReporter createCrashlyticsReporter() => _CrashlyticsReporterStub();
 
-/// Silent no-op: `CrashlyticsService` guards every entry point with a web
-/// check, so these methods are unreachable in practice — the class exists to
-/// satisfy the compile-time contract, not to handle calls.
+/// No-op: `CrashlyticsService` checks for the web before every call, so
+/// these methods are never reached — the class only satisfies the
+/// compile-time contract.
 final class _CrashlyticsReporterStub implements CrashlyticsReporter {
   ///
   @override

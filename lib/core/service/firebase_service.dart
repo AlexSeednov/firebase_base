@@ -6,30 +6,30 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:injectable/injectable.dart';
 import 'package:meta/meta.dart';
 
-///
+/// Firebase core start-up, which also decides the fate of Crashlytics.
 @lazySingleton
 final class FirebaseService {
   ///
   @visibleForTesting
   FirebaseService();
 
-  /// Name for logging
+  ///
   static const String _logName = 'Firebase Service';
 
-  /// Reports a failure instead of throwing: a missing or malformed native
-  /// configuration must cost the application its telemetry, not its launch.
+  /// Returns `false` instead of throwing: a missing or malformed native
+  /// configuration costs the application its telemetry, not its launch.
   ///
-  /// [isCrashlyticsEnabled] `false` leaves messaging and the rest of Firebase
-  /// intact while handing crash reporting over to another tool — the two are
-  /// independent, and an app reporting to both would pay twice for the same
-  /// crash and see it split across dashboards.
+  /// [isCrashlyticsEnabled] `false` keeps messaging and the rest of Firebase
+  /// but silences Crashlytics, for an application that reports crashes
+  /// elsewhere — otherwise it pays twice for every crash and sees it split
+  /// across two dashboards.
   Future<bool> prepare({
     FirebaseOptions? options,
     bool isCrashlyticsEnabled = true,
   }) async {
-    /// On web there is no native config file to read the options from, so
-    /// without explicit [options] initialization is guaranteed to fail - skip
-    /// cleanly instead of paying for the exception
+    /// The web has no native config file to read the options from: without
+    /// explicit [options] the initialization is bound to fail, so it is
+    /// skipped rather than paid for with an exception
     if (isWeb && options == null) {
       logInfo(
         info: '$_logName: web requires explicit FirebaseOptions, skipped',
@@ -44,9 +44,9 @@ final class FirebaseService {
       return false;
     }
 
-    /// Need to do here to start logger as soon as possible.
-    /// Only after a successful initialization - Crashlytics has no instance
-    /// to bind its handlers to otherwise.
+    /// Right away, so the logger reports to Crashlytics from the start — but
+    /// only after a successful initialization: before it Crashlytics has no
+    /// instance to bind its handlers to
     final CrashlyticsService crashlytics = getIt<CrashlyticsService>();
     if (isCrashlyticsEnabled) {
       crashlytics.prepare();
