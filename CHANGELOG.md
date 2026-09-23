@@ -19,6 +19,14 @@
   Android points to the package's own local notifications instead of a
   different plugin.
 
+* **README edited for readability, in both languages.** Methods are written
+  as `FirebaseBase.prepare`, not `FirebaseBase -> prepare`; *Usage* goes in
+  the order an application follows (dependency, module, `prepare`), names the
+  four services and says what `prepare` returns; the Crashlytics flag and the
+  messaging section are split into short paragraphs, with sub-headings for
+  the token, the payload and the permission. The Russian text is rewritten
+  the same way, without the calques it had picked up in translation.
+
 ## 0.2.7
 
 * **`application_base` constraint widened to `>=0.3.0 <0.5.0`.** The caret

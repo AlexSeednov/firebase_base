@@ -2,8 +2,7 @@
 
 Единая базовая интеграция Firebase для Flutter-приложений на основе
 [пакета application_base](https://github.com/AlexSeednov/application_base)
-с
-[особой архитектурой](https://miro.com/app/board/uXjVNJVBM3o=/?share_link_id=771428578014)
+с [особой архитектурой](https://miro.com/app/board/uXjVNJVBM3o=/?share_link_id=771428578014).
 
 ## Возможности
 
@@ -21,45 +20,43 @@
   [Поддержка веба](#поддержка-веба)
 
 Остальные платформы не поддерживаются из-за
-[awesome_notifications](https://pub.dev/packages/awesome_notifications)
+[awesome_notifications](https://pub.dev/packages/awesome_notifications).
 
 ## Поддержка веба
 
-В вебе пакет собирается и работает, сводя функциональность к необходимому
-минимуму:
+В вебе пакет собирается и работает, но умеет меньше:
 
-* **Firebase Core** — инициализируется, только если в `FirebaseBase.prepare`
+* **Firebase Core** инициализируется, только если в `FirebaseBase.prepare`
   явно переданы `FirebaseOptions`: в вебе нет нативного конфигурационного
-  файла, из которого их можно было бы прочитать. Без них весь стек Firebase
-  аккуратно пропускается (с info-логом).
-* **Crashlytics** — FlutterFire в вебе его не поддерживает вовсе (плагин там
-  даже не собирается). Внутри пакета SDK изолирован за условным импортом
-  (`CrashlyticsReporter`) и в вебе подменяется молчаливой заглушкой (no-op);
-  глобальные обработчики ошибок и удалённый логгер при этом остаются
-  нетронутыми.
-* **Cloud Messaging** — технически в вебе возможен (FCM Web Push), но пока не
-  реализован: для него нужны service worker `firebase-messaging-sw.js` в
-  приложении-потребителе и VAPID-ключ для `getToken`. Пока `prepare` в вебе
-  пропускает messaging с info-логом. Ограничения на стороне браузера, которые
-  стоит держать в голове: пуши показывает сам браузер, а Safari на iOS
-  доставляет их только в PWA, установленное на домашний экран.
-* **Локальные уведомления** — `awesome_notifications` используется только в
-  foreground-сценарии на Android и в вебе не затрагивается вовсе.
+  файла, из которого их можно прочитать. Без них весь стек Firebase
+  пропускается, в лог пишется info-строка.
+* **Crashlytics** FlutterFire в вебе не поддерживает вовсе, плагин там даже
+  не собирается. Внутри пакета SDK спрятан за условным импортом
+  (`CrashlyticsReporter`) и в вебе заменён пустой заглушкой. Глобальные
+  обработчики ошибок и удалённый логгер при этом работают как обычно.
+* **Cloud Messaging** в вебе технически возможен (FCM Web Push), но пока не
+  реализован. Для него нужны service worker `firebase-messaging-sw.js` в
+  приложении и VAPID-ключ для `getToken`. Пока `prepare` пропускает messaging
+  в вебе с info-строкой в логе. Стоит помнить и об ограничениях браузера:
+  пуши показывает он сам, а Safari на iOS доставляет их только в PWA,
+  установленное на домашний экран.
+* **Локальные уведомления** нужны только на Android в foreground-сценарии,
+  в вебе `awesome_notifications` не задействован.
 
 ## Требования
 
 Определяются минимальными требованиями
-[пакета application_base](https://github.com/AlexSeednov/application_base)
+[пакета application_base](https://github.com/AlexSeednov/application_base).
 
 ## История изменений
 
 Все примечания к релизам смотрите в
-[Changelog](https://github.com/AlexSeednov/firebase_base/blob/main/CHANGELOG.md)
+[Changelog](https://github.com/AlexSeednov/firebase_base/blob/main/CHANGELOG.md).
 
 ## Использование
 
-Добавьте в pubspec.yaml вашего пакета запись вроде этой (и выполните неявный
-flutter pub get):
+1. Добавьте в `pubspec.yaml` приложения запись вроде этой (и выполните
+   `flutter pub get`):
 
 ```yaml
   # Not supported: Linux | macOS | Windows
@@ -70,31 +67,40 @@ flutter pub get):
     version: 0.2.8
 ```
 
-Теперь достаточно вызвать `FirebaseBase -> prepare` при запуске приложения,
-чтобы инициализировать всё необходимое.
+2. Подключите injectable-модуль пакета к своему сервис-локатору:
 
 ```dart
-// Wire the package's injectable module into your service locator:
 import 'package:firebase_base/core/service/service_locator_firebase.module.dart';
 
 @InjectableInit(
   externalPackageModulesBefore: [ExternalModule(FirebaseBasePackageModule)],
 )
 Future<void> configureDependencies() => getIt.init();
+```
 
-// On launch — await DI init, then initialize Firebase:
+3. При запуске дождитесь инициализации DI и затем вызовите
+   `FirebaseBase.prepare`:
+
+```dart
 await configureDependencies();
 await FirebaseBase.prepare(name: applicationName);
 ```
-где `applicationName` — имя Android-приложения для системных настроек уведомлений.
 
-Когда подключены внешние модули пакетов, `getIt.init()` становится
-асинхронным, поэтому вызывайте его с **await**. `FirebaseBase.prepare`
-резолвит зарегистрированные сервисы, поэтому он должен выполняться **после**
-того, как `getIt.init()` завершился.
+`applicationName` — имя приложения, под которым его уведомления показываются
+в системных настройках Android.
 
-На **Android** можно также передать два необязательных параметра, которые
-настраивают канал уведомлений и иконку в строке состояния (см.
+Порядок важен. Когда подключены внешние модули пакетов, `getIt.init()`
+становится асинхронным, поэтому вызывайте его с **await**.
+`FirebaseBase.prepare` берёт сервисы из getIt, поэтому должен выполняться
+**после** того, как `getIt.init()` завершился.
+
+`prepare` возвращает `bool`: запустилось ли всё. Исключений он не бросает:
+сломанная настройка Firebase ограничивает приложение, а не блокирует его
+запуск, и что делать без Firebase, решает вызывающая сторона. Без Firebase
+Core messaging не запускается.
+
+На **Android** можно передать ещё два необязательных параметра: канал
+уведомлений и иконку в строке состояния (см.
 [Локальные уведомления](#локальные-уведомления)):
 
 ```dart
@@ -105,18 +111,18 @@ await FirebaseBase.prepare(
 );
 ```
 
-Все четыре сервиса — синглтоны, жизненным циклом которых владеет getIt; их
-регистрирует injectable-модуль пакета (`@lazySingleton`). Получайте их через
-`getIt<T>()` или внедряйте через конструктор.
+Сервисов в пакете четыре: `FirebaseService`, `CrashlyticsService`,
+`FirebaseMessagingService` и `LocalNotificationsService`. Все они синглтоны,
+жизненным циклом которых владеет getIt, регистрирует их injectable-модуль
+пакета (`@lazySingleton`). Берите их через `getIt<T>()` или через конструктор.
 
 ## Firebase Core
 
 На базе [firebase_core](https://pub.dev/packages/firebase_core).
 
-Всё необходимое инициализируется вызовом `FirebaseBase -> prepare`.
-Но если нужно задать собственные параметры проекта Firebase, можно передать
-`FirebaseOptions` в функцию `prepare`. Не забудьте добавить пакет
-`firebase_core` в `pubspec.yaml`:
+Всё необходимое инициализирует `FirebaseBase.prepare`. Если нужны
+собственные параметры проекта Firebase, передайте в него `FirebaseOptions`.
+Пакет `firebase_core` при этом должен быть и в `pubspec.yaml` приложения:
 
 ```yaml
   # https://pub.dev/packages/firebase_core
@@ -127,7 +133,7 @@ await FirebaseBase.prepare(
 
 На базе [firebase_crashlytics](https://pub.dev/packages/firebase_crashlytics).
 
-Всё необходимое инициализируется вызовом `FirebaseBase -> prepare`.
+Всё необходимое инициализирует `FirebaseBase.prepare`.
 
 Если приложение отправляет краши через другой инструмент, отключите
 Crashlytics, сохранив остальной Firebase:
@@ -139,60 +145,62 @@ await FirebaseBase.prepare(
 );
 ```
 
-Флаг не просто пропускает установку Dart-обработчиков: нативный SDK начинает
-сбор данных вместе с `Firebase.initializeApp`, поэтому пакет дополнительно
-вызывает `setCrashlyticsCollectionEnabled(false)` — иначе нативные краши
-продолжали бы уходить в Firebase и после того, как приложение от него
-отказалось. Настройка сохраняется между запусками, поэтому приложению, которое
-вернётся к Crashlytics, отправку восстановит ветка `true`. Уберите из
-iOS-проекта и фазу сборки *Crashlytics Upload Symbols*, иначе сборка продолжит
-загружать dSYM-файлы в проект, который никто не читает.
+Что при этом происходит:
+
+* Флаг не просто пропускает установку Dart-обработчиков. Нативный SDK
+  начинает сбор данных вместе с `Firebase.initializeApp`, поэтому пакет
+  дополнительно вызывает `setCrashlyticsCollectionEnabled(false)`. Иначе
+  нативные краши продолжали бы уходить в Firebase после того, как приложение
+  от него отказалось.
+* Настройка сохраняется между запусками. Приложению, которое вернётся к
+  Crashlytics, достаточно снова передать `true`: эта ветка включает сбор
+  обратно.
+* В iOS-проекте уберите и фазу сборки *Crashlytics Upload Symbols*, иначе
+  сборка продолжит загружать dSYM-файлы в проект, который никто не читает.
 
 ## Firebase Cloud Messaging
 
 На базе [firebase_messaging](https://pub.dev/packages/firebase_messaging).
 
-Инструкция по настройке Firebase — [здесь](https://firebase.google.com/docs/cloud-messaging/flutter/client)
+Инструкция по настройке Firebase:
+[здесь](https://firebase.google.com/docs/cloud-messaging/flutter/client).
 
-Поведение сообщений зависит от состояния приложения и ОС.
-Возможные состояния приложения:
+Как показывается сообщение, зависит от состояния приложения и ОС. Состояния
+приложения:
 
-* **Foreground** — приложение открыто, видно на экране и используется
+* **Foreground** — приложение открыто, видно на экране и используется.
+* **Background** — приложение открыто, но в фоне (свёрнуто). Обычно так
+  бывает, когда пользователь нажал кнопку «Домой», переключился на другое
+  приложение через переключатель или открыл приложение в другой вкладке
+  (веб).
+* **Terminated** — устройство заблокировано или приложение не запущено.
 
-* **Background** — приложение открыто, но находится в фоне
-(свёрнуто). Обычно так бывает, когда пользователь нажал на устройстве кнопку
-«Домой», переключился на другое приложение через переключатель приложений
-или открыл приложение в другой вкладке (веб)
-
-* **Terminated** — устройство заблокировано или приложение не запущено
-
-В **Foreground** пуши показываются после некоторой подготовки:
+Чтобы пуш показывался в **Foreground**, нужна подготовка:
 
 * На **Android** FCM не показывает уведомление, пришедшее, пока приложение
-на переднем плане. Пакет показывает его сам — локальным уведомлением на канале
-с высокой важностью, см.
-[Локальные уведомления](#локальные-уведомления)
+  на переднем плане. Пакет показывает его сам, локальным уведомлением на
+  канале с высокой важностью, см.
+  [Локальные уведомления](#локальные-уведомления).
+* На **iOS** параметры показа задаются через
+  `FirebaseMessaging.setForegroundNotificationPresentationOptions`.
 
-* На **iOS** можно изменить параметры показа уведомлений для приложения через
-`FirebaseMessaging -> setForegroundNotificationPresentationOptions`
+Подробности в
+[документации Firebase](https://firebase.google.com/docs/cloud-messaging/flutter/receive),
+схема с общей картиной
+[здесь](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png).
 
-Подробности — в [документации Firebase](https://firebase.google.com/docs/cloud-messaging/flutter/receive)
+### Токен и payload
 
-Схема с общей картиной — [здесь](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png)
-
-FCM-токен устройства доступен через **FirebaseMessagingService->token**.
-
-Пример:
+FCM-токен устройства даёт `FirebaseMessagingService.token`, на iOS рядом с
+ним `apnsToken`:
 
 ```dart
 getIt<FirebaseMessagingService>().token;
 ```
 
-Чтобы получить данные из payload пуша, подпишитесь на стрим `pushSubject`.
-При подписке стрим сразу отдаст предыдущий payload, если он был.
-Payload — `Map<String, dynamic>`
-
-Пример:
+Данные из payload пуша приходят в стрим `pushSubject`. Payload — это
+`Map<String, dynamic>`. Новый подписчик сразу получает предыдущий payload,
+если он был:
 
 ```dart
 ///
@@ -215,45 +223,40 @@ void _onData(Map<String, dynamic> payload) {
 }
 ```
 
-**Важно:** не забудьте запросить у пользователя разрешение на уведомления через
-`FirebaseMessagingService->requestPermission`.
+### Разрешение на уведомления
 
-Пример
+Разрешение у пользователя запрашивает
+`FirebaseMessagingService.requestPermission`:
 
 ```dart
 final status = await getIt<FirebaseMessagingService>().requestPermission();
 ```
 
-С точки зрения UX лучше вызывать его один раз — только при авторизации /
-регистрации пользователя.
-
+Для UX лучше вызывать его один раз, при авторизации или регистрации
+пользователя.
 
 ## Локальные уведомления
 
-На базе [awesome_notifications](https://pub.dev/packages/awesome_notifications)
+На базе [awesome_notifications](https://pub.dev/packages/awesome_notifications).
 
-Используются только на **Android** — для показа пуш-уведомлений, полученных,
-когда приложение находится в состоянии **Foreground**.
-
-Поддерживаются заголовок, текст и изображение.
+Используются только на **Android**: показывают пуши, полученные в состоянии
+**Foreground**. Поддерживаются заголовок, текст и изображение.
 
 ### Канал уведомлений (`channelKey`)
 
-На Android пуш показывается двумя разными механизмами в зависимости от
-состояния приложения:
+На Android пуш показывают два разных механизма, в зависимости от состояния
+приложения:
 
-* **Foreground** — этим пакетом через `awesome_notifications`, в канале,
-который создаётся здесь же;
-* **Background / Terminated** — самим FCM, в канале, объявленном в манифесте
-приложения как `com.google.firebase.messaging.default_notification_channel_id`.
+* **Foreground** — этот пакет через `awesome_notifications`, на канале,
+  который создаётся здесь же;
+* **Background / Terminated** — сам FCM, на канале, объявленном в манифесте
+  приложения как `com.google.firebase.messaging.default_notification_channel_id`.
 
-Чтобы оба механизма использовали один и тот же канал с **высокой важностью**
-(а значит, показывали всплывающий heads-up баннер), `channelKey`, переданный
-в `prepare`, ОБЯЗАН в точности совпадать со значением в манифесте. Если они
+Чтобы оба механизма использовали один канал с **высокой важностью** и
+показывали всплывающий heads-up баннер, `channelKey`, переданный в `prepare`,
+**должен в точности совпадать** со значением в манифесте. Если они
 расходятся, FCM откатывается на канал с важностью по умолчанию, и пуши
-приходят без баннера. Делайте ключ независимым от флейвора — каналы у каждого
-приложения свои, поэтому разные флейворы (с разными `applicationId`) не
-конфликтуют.
+приходят без баннера.
 
 ```xml
 <!-- AndroidManifest.xml -->
@@ -262,16 +265,18 @@ final status = await getIt<FirebaseMessagingService>().requestPermission();
   android:value="app-notifications" />
 ```
 
-Если `channelKey` не передан, для обратной совместимости используется
-устаревший ключ `'<name>-notifications'`.
+Делайте ключ одинаковым для всех флейворов: каналы у каждого приложения
+свои, поэтому флейворы с разными `applicationId` не конфликтуют. Если
+`channelKey` не передан, для обратной совместимости используется устаревший
+ключ `'<name>-notifications'`.
 
 ### Малая иконка (`icon`)
 
-Малую иконку в строке состояния и в уведомлении Android отрисовывает только по
-её альфа-каналу — как белый (а затем тонированный) силуэт. Подготовьте
-отдельный **монохромный** (прозрачный + белый) drawable, иначе будет
-использована иконка лаунчера, и она отобразится белым пятном (а на устройствах
-некоторых производителей, например Xiaomi/MIUI, не отобразится вовсе).
+Малую иконку в строке состояния и в уведомлении Android рисует только по её
+альфа-каналу, как белый (затем тонированный) силуэт. Подготовьте отдельный
+**монохромный** drawable (прозрачный фон + белый рисунок). Иначе будет взята
+иконка лаунчера, и она отобразится белым пятном, а на устройствах некоторых
+производителей (Xiaomi/MIUI) не отобразится вовсе.
 
 Передайте её как `icon: 'resource://drawable/ic_stat_notification'` для
 foreground-сценария и объявите тот же drawable в манифесте для фонового
