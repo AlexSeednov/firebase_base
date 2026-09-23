@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:application_base/core/service/logger_service.dart';
 import 'package:application_base/core/service/platform_service.dart';
 import 'package:firebase_base/core/service/crashlytics_reporter.dart';
@@ -45,7 +47,21 @@ final class CrashlyticsService {
     FlutterError.onError = _onFatalError;
     PlatformDispatcher.instance.onError = _onError;
 
+    unawaited(_enable());
+
     logInfo(info: '$_logName prepared');
+  }
+
+  /// Undoes a [disable] of an earlier launch. The SDK persists the flag, so an
+  /// application that came back to Crashlytics would otherwise bind its
+  /// handlers to a collector that silently drops every report — the mirror of
+  /// the unconditional write in [disable].
+  Future<void> _enable() async {
+    try {
+      await _reporter.setCollectionEnabled(isEnabled: true);
+    } catch (e) {
+      logError(error: '$_logName enabling exception: $e');
+    }
   }
 
   /// Silences Crashlytics for an application that reports crashes elsewhere.

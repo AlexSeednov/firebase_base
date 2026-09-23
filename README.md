@@ -10,6 +10,7 @@ For general information about developing packages, see the Dart guide for
 and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
+**English** | [Русский](README.ru.md)
 
 Unified base Firebase integration for Flutter applications based on 
 [application_base package](https://github.com/AlexSeednov/application_base)
@@ -73,12 +74,12 @@ Add a line like this to your package's pubspec.yaml (and run an implicit
 flutter pub get):
 
 ```yaml
-  # Not supported: Linux | MacOS | Web | Windows
+  # Not supported: Linux | macOS | Windows
   firebase_base:
     git:
       url: https://github.com/AlexSeednov/firebase_base
       tag_pattern: v{{version}}
-    version: 0.1.3
+    version: 0.2.8
 ```
 
 Now just call `FirebaseBase -> prepare` on application launching to initialize 
@@ -124,13 +125,13 @@ them through a constructor.
 Based on [firebase_core](https://pub.dev/packages/firebase_core).
 
 All necessary data will be initiated by using `FirebaseBase -> prepare`. 
-But if you want to set custom Firebase project options, you can send an 
-`FirebaseOptions` in `prepare` function. Do not forget to add 
+But if you want to set custom Firebase project options, you can pass 
+`FirebaseOptions` to the `prepare` function. Do not forget to add 
 `firebase_core` package in `pubspec.yaml`
 
 ```yaml
   # https://pub.dev/packages/firebase_core
-  firebase_core: ^3.5.0
+  firebase_core: ^4.11.0
 ```
 
 ## Firebase Crashlytics
@@ -163,7 +164,7 @@ Based on [firebase_messaging](https://pub.dev/packages/firebase_messaging).
 
 Setup Firebase instruction [here](https://firebase.google.com/docs/cloud-messaging/flutter/client)
 
-Messages have different behaviour depends on application state and OS.
+How a message is shown depends on the application state and the OS.
 Application state can be:
 
 * **Foreground** - When the application is open, in view and in use
@@ -177,16 +178,17 @@ or has the application open in a different tab (web)
 
 In **Foreground** pushes will be shown after some preparations:
 
-* On **Android**, you must create a "High Priority" notification channel,
-but sometimes it doesn't work.. So it's better to use local notifications via
-[flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+* On **Android** FCM does not show a notification that arrives while the
+application is in the foreground. The package shows it itself, as a local
+notification on a high importance channel — see
+[Local notifications](#local-notifications)
 
 * On **iOS**, you can update the presentation options for the application via 
 `FirebaseMessaging -> setForegroundNotificationPresentationOptions`
 
 Details in [Firebase docs](https://firebase.google.com/docs/cloud-messaging/flutter/receive)
 
-Sheme with common information [here](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png)
+A diagram with the overall picture [here](https://user-images.githubusercontent.com/40064496/197368144-7bfcee7e-644a-4bdc-80f1-b4d38c2eaaff.png)
 
 FCM Device token available via **FirebaseMessagingService->token**.
 
@@ -232,7 +234,7 @@ Example
 final status = await getIt<FirebaseMessagingService>().requestPermission();
 ```
 
-It's better for UX to call in once on user Authorization / Registration only.
+It's better for UX to call it once, on user Authorization / Registration only.
 
 
 ## Local notifications

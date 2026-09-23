@@ -1,3 +1,24 @@
+## 0.2.8
+
+* **Crashlytics collection is switched back on with `isCrashlyticsEnabled:
+  true`.** `isCrashlyticsEnabled: false` writes the SDK's collection flag
+  off, and the SDK keeps that flag across launches, but the `true` branch
+  never wrote it back. An application that came back to Crashlytics had its
+  handlers bound to a collector that silently dropped every report, while the
+  README promised the opposite. `CrashlyticsService.prepare` now enables
+  collection unconditionally, as `disable` has always disabled it. An
+  application that never turned Crashlytics off sees no difference.
+
+* **README in Russian** — `README.ru.md`, a full translation of `README.md`,
+  with a language switcher at the top of both. The English file stays the
+  source of truth, and every README change is made in both files at once.
+
+* **README brought up to date**: the installation snippet shows the current
+  version and no longer lists the web as unsupported, the `firebase_core`
+  constraint matches the package's own, and the foreground-push advice for
+  Android points to the package's own local notifications instead of a
+  different plugin.
+
 ## 0.2.7
 
 * **`application_base` constraint widened to `>=0.3.0 <0.5.0`.** The caret
