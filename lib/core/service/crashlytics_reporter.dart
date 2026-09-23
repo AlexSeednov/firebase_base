@@ -1,23 +1,21 @@
 import 'package:flutter/foundation.dart';
 
-/// Thin facade over the Crashlytics SDK calls used by `CrashlyticsService`.
+/// The Crashlytics SDK calls `CrashlyticsService` makes, behind a facade.
 ///
-/// Exists only to keep the `firebase_crashlytics` import out of the web
-/// compilation: the plugin has no web implementation and does not even
-/// compile there. The io implementation forwards to the SDK, the stub is a
-/// silent no-op. The concrete class is chosen at compile time via conditional
-/// import in `crashlytics_service.dart`.
+/// Keeps `firebase_crashlytics` out of the web build, where the plugin does
+/// not even compile: the conditional import in `crashlytics_service.dart`
+/// picks the SDK-backed implementation or a no-op stub at compile time.
 abstract interface class CrashlyticsReporter {
-  /// Turn the SDK data collection on or off (persisted between launches).
+  /// Switches collection on or off; the SDK persists the flag across launches.
   Future<void> setCollectionEnabled({required bool isEnabled});
 
-  /// Add a message to the crash report log trace.
+  /// Adds a line to the log attached to the next report.
   void log(String message);
 
-  /// Attach a custom key-value pair to every following report.
+  /// Attaches a key-value pair to every following report.
   Future<void> setCustomKey(String key, Object value);
 
-  /// Send a recorded (caught) error report.
+  /// Sends a report of a caught error.
   Future<void> recordError(
     Object error,
     StackTrace stack, {
@@ -26,6 +24,6 @@ abstract interface class CrashlyticsReporter {
     bool printDetails = false,
   });
 
-  /// Send an uncaught Flutter framework error report.
+  /// Sends a report of an error caught by the Flutter framework.
   void recordFlutterFatalError(FlutterErrorDetails errorDetails);
 }

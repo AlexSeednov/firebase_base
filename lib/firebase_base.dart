@@ -1,44 +1,38 @@
 import 'package:application_base/core/service/service_locator.dart';
 import 'package:firebase_base/core/service/firebase_messaging_service.dart';
 import 'package:firebase_base/core/service/firebase_service.dart';
-// Hide firebase_core's FirebaseService to avoid a name clash with this
-// package's own FirebaseService; only FirebaseOptions is needed from here.
+// firebase_core declares a FirebaseService of its own; only FirebaseOptions is
+// needed from it.
 import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 
-/// Entry point for the package's start-up: Firebase core, Crashlytics,
-/// messaging and local notifications.
+/// Start-up of the package: Firebase core, Crashlytics, messaging and local
+/// notifications.
 abstract final class FirebaseBase {
-  /// **name** - Android application name for system notification settings
+  /// Call after the application's `getIt.init()`: the services are registered
+  /// by the injectable module `FirebaseBasePackageModule`, wired through
+  /// `externalPackageModulesBefore` of the application's `@InjectableInit`.
   ///
-  /// **channelKey** - stable Android notification channel id. It MUST match
+  /// **name** — application name, shown in the Android notification settings.
+  ///
+  /// **channelKey** — Android notification channel id. Must equal
   /// `com.google.firebase.messaging.default_notification_channel_id` in the
-  /// app's `AndroidManifest.xml`, otherwise pushes received in
-  /// Background/Terminated state are shown without a heads-up banner. Keep it
-  /// flavor-independent. `null` falls back to the legacy
-  /// `'$name-notifications'` key.
+  /// application's `AndroidManifest.xml`, otherwise pushes received in the
+  /// background or terminated state show no heads-up banner. Keep it the same
+  /// for every flavor. `null` falls back to `'$name-notifications'`.
   ///
-  /// **icon** - small (status bar) icon resource for foreground notifications
-  /// on Android, e.g. `'resource://drawable/ic_stat_notification'`. Must be a
-  /// monochrome (transparent + white) asset. `null` falls back to the
-  /// application launcher icon.
+  /// **icon** — status bar icon of foreground notifications on Android, e.g.
+  /// `'resource://drawable/ic_stat_notification'`. Must be monochrome (white
+  /// on transparent). `null` falls back to the launcher icon.
   ///
-  /// **options** - Specific Firebase configuration options depends on current
-  /// platform and flavor
+  /// **options** — Firebase options of the current platform and flavor.
   ///
-  /// **isCrashlyticsEnabled** - whether crash reporting stays with Firebase.
-  /// Pass `false` when the application already reports crashes through another
-  /// tool: messaging and the rest of Firebase keep working, while Crashlytics
-  /// stops collecting instead of duplicating every crash into a second
-  /// dashboard.
+  /// **isCrashlyticsEnabled** — `false` when the application reports crashes
+  /// through another tool: messaging keeps working, while Crashlytics stops
+  /// collecting instead of duplicating every crash into a second dashboard.
   ///
-  /// Registration of the package's services is performed by the injectable
-  /// module `FirebaseBasePackageModule` (wired via
-  /// `externalPackageModulesBefore` in the consumer's `@InjectableInit`), so
-  /// this method must be called AFTER the consumer's `getIt.init()`.
-  ///
-  /// Returns whether every part started up. Nothing here throws: a broken
+  /// Returns whether every part started. Nothing here throws: a broken
   /// Firebase setup degrades the application instead of blocking its launch,
-  /// so the caller decides what an unavailable Firebase means for it.
+  /// and the caller decides what that means for it.
   static Future<bool> prepare({
     required String name,
     String? channelKey,
@@ -46,7 +40,6 @@ abstract final class FirebaseBase {
     FirebaseOptions? options,
     bool isCrashlyticsEnabled = true,
   }) async {
-    /// Prepare all Firebase packages
     final bool isCoreReady = await getIt<FirebaseService>().prepare(
       options: options,
       isCrashlyticsEnabled: isCrashlyticsEnabled,
