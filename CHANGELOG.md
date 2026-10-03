@@ -1,3 +1,12 @@
+## 0.2.9
+
+* **`application_base` constraint widened to `>=0.3.0 <0.6.0`.** The bound
+  stopped at 0.5.0, so an application moving to that line could not resolve
+  this package at all. What 0.5.0 removes — `ApplicationLocale.resolve` and
+  `pushNamed` — is used nowhere here.
+
+* README: the installation example names the current version.
+
 ## 0.2.8
 
 * **Crashlytics collection is switched back on with `isCrashlyticsEnabled:

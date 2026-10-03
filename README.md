@@ -78,7 +78,7 @@ for all release notes.
     git:
       url: https://github.com/AlexSeednov/firebase_base
       tag_pattern: v{{version}}
-    version: 0.2.8
+    version: 0.2.9
 ```
 
 2. Wire the package's injectable module into your service locator:
