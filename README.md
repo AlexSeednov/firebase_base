@@ -78,7 +78,7 @@ for all release notes.
     git:
       url: https://github.com/AlexSeednov/firebase_base
       tag_pattern: v{{version}}
-    version: 0.2.9
+    version: 0.3.0
 ```
 
 2. Wire the package's injectable module into your service locator:
@@ -232,6 +232,19 @@ void dispose() {
 void _onData(Map<String, dynamic> payload) {
     /// Do some stuff here
 }
+```
+
+A push that arrives while the application is in **Foreground** also goes to
+the `receivedPushSubject` stream, whether or not the user opens it — on both
+platforms, even though on iOS the OS shows the banner itself. It is the place
+to refresh the data a push is about while the user is looking at it. Unlike
+`pushSubject`, a new listener gets nothing from the past: an arrival is a
+moment, not a state. A push without `data` arrives as an empty map. Pushes
+that arrive in **Background** or **Terminated** are not announced — the
+application does not see them until the user opens one:
+
+```dart
+getIt<FirebaseMessagingService>().receivedPushSubject.listen(_onReceived);
 ```
 
 ### Notification permission

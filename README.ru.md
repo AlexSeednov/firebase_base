@@ -64,7 +64,7 @@
     git:
       url: https://github.com/AlexSeednov/firebase_base
       tag_pattern: v{{version}}
-    version: 0.2.9
+    version: 0.3.0
 ```
 
 2. Подключите injectable-модуль пакета к своему сервис-локатору:
@@ -221,6 +221,19 @@ void dispose() {
 void _onData(Map<String, dynamic> payload) {
     /// Do some stuff here
 }
+```
+
+Пуш, пришедший, пока приложение в **Foreground**, попадает ещё и в стрим
+`receivedPushSubject` — откроет его пользователь или нет. Так на обеих
+платформах, хотя на iOS баннер показывает сама ОС. Это место, где стоит
+обновить данные, о которых пуш, пока пользователь на них смотрит. В отличие от
+`pushSubject`, новый подписчик ничего из прошлого не получает: приход пуша —
+момент, а не состояние. Пуш без `data` приходит пустым словарём. Пуши,
+пришедшие в **Background** или **Terminated**, не объявляются — приложение не
+видит их, пока пользователь не откроет один из них:
+
+```dart
+getIt<FirebaseMessagingService>().receivedPushSubject.listen(_onReceived);
 ```
 
 ### Разрешение на уведомления

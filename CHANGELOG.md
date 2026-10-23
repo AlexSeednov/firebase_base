@@ -1,3 +1,16 @@
+## 0.3.0
+
+* **Pushes received in the foreground go out through
+  `FirebaseMessagingService.receivedPushSubject`.** `pushSubject` carries only
+  the pushes the user opens, so an application had no way to learn that a push
+  arrived while it was in view: the screen behind the banner kept the old state
+  until its own refresh. The new stream carries the payload of every push
+  received in the foreground, on Android and iOS alike — on iOS the package now
+  listens to `FirebaseMessaging.onMessage` for that, while the OS still shows
+  the banner itself. A push without `data` arrives as an empty map.
+
+* README: the installation example names the current version.
+
 ## 0.2.9
 
 * **`application_base` constraint widened to `>=0.3.0 <0.6.0`.** The bound

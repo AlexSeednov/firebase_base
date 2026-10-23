@@ -12,7 +12,8 @@ import 'package:rxdart/rxdart.dart';
 
 /// Firebase Cloud Messaging: the device token, the notification permission
 /// and the pushes the user opens, whose payloads go out through
-/// [pushSubject].
+/// [pushSubject]. Pushes that merely arrive while the application is in view
+/// go out through [receivedPushSubject].
 ///
 /// Who shows a push depends on the application state:
 ///
@@ -69,7 +70,7 @@ final class FirebaseMessagingService with LoggingMixin {
   /// and every push would be handled twice.
   bool _isPrepared = false;
 
-  /// Foreground messages listener - Android only, see [prepare]
+  /// Foreground messages listener, see [prepare]
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
 
   ///
@@ -84,6 +85,20 @@ final class FirebaseMessagingService with LoggingMixin {
   /// a listener that subscribes after [prepare]. The flip side: every new
   /// listener gets the latest payload again.
   final pushSubject = BehaviorSubject<Map<String, dynamic>>();
+
+  /// Payloads (`data`) of the pushes received in the foreground, whether or
+  /// not the user opens them. A typical use is refreshing the data a push is
+  /// about while the user is looking at it: otherwise the screen behind the
+  /// banner shows the old state until its own refresh.
+  ///
+  /// A [PublishSubject]: an arrival is a moment, not a state, and a listener
+  /// that subscribes later has nothing to catch up on. A push without `data`
+  /// arrives as an empty map — the arrival itself is the news.
+  ///
+  /// Pushes received in the background or while the application is not
+  /// running are not announced: the application does not see them until the
+  /// user opens one.
+  final receivedPushSubject = PublishSubject<Map<String, dynamic>>();
 
   /// Called with the new token when FCM refreshes it. The token [prepare]
   /// gets is not announced: read it from [token].
@@ -131,10 +146,13 @@ final class FirebaseMessagingService with LoggingMixin {
           channelKey: channelKey,
           icon: icon,
         );
-        _foregroundSubscription = FirebaseMessaging.onMessage.listen(
-          _onForegroundListen,
-        );
       }
+
+      /// On both platforms: even where the OS shows the push itself, this
+      /// stream is the only way the application learns that it arrived
+      _foregroundSubscription = FirebaseMessaging.onMessage.listen(
+        _onForegroundListen,
+      );
 
       final bool result = await _getToken(lastTry: false);
       if (!result) {
@@ -175,6 +193,7 @@ final class FirebaseMessagingService with LoggingMixin {
     _openedSubscription = null;
 
     await pushSubject.close();
+    await receivedPushSubject.close();
 
     _messaging = null;
     _isPrepared = false;
@@ -284,12 +303,17 @@ final class FirebaseMessagingService with LoggingMixin {
     _handleMessage(pushEntity);
   }
 
-  /// A push arrived in the foreground on Android, where the OS does not show
-  /// it: it is shown as a local notification.
+  /// A push arrived in the foreground: it goes out through
+  /// [receivedPushSubject], and on Android, where the OS does not show it,
+  /// it is also shown as a local notification.
   void _onForegroundListen(RemoteMessage message) {
     final pushEntity = PushEntity.fromMessage(message);
 
     logNamedInfo(info: 'Got push "${pushEntity.title}" in Foreground state');
+
+    receivedPushSubject.add(pushEntity.data ?? const {});
+
+    if (!isAndroid) return;
 
     unawaited(
       _showForegroundNotification(

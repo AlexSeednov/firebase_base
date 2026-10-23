@@ -1,7 +1,7 @@
 # Last full audit of the SDK and dependencies: 05.07.2026
 name: firebase_base
 description: "Unified base Firebase integration for Flutter applications"
-version: 0.2.9
+version: 0.3.0
 homepage: https://github.com/AlexSeednov/firebase_base
 # Not publishable: pub.dev rejects git dependencies, and application_base is
 # one.
